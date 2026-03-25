@@ -1,0 +1,23 @@
+---
+# OperatorGroup scopes the operator to the liberty-apps namespace
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: liberty-operator-group
+  namespace: liberty-apps
+spec:
+  targetNamespaces:
+    - liberty-apps
+---
+# Subscription installs the WebSphere Liberty Operator from IBM catalog
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: ibm-websphere-liberty
+  namespace: liberty-apps
+spec:
+  channel: v1.3
+  name: ibm-websphere-liberty
+  source: ibm-operator-catalog
+  sourceNamespace: openshift-marketplace
+  installPlanApproval: Automatic
