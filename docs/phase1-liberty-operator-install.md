@@ -95,25 +95,32 @@ Wait for `1/1 Running` status. First pull may take a few minutes.
 
 The Liberty Operator automatically creates a Route when `expose: true` is set.
 
+> **Important:** The operator defaults to `reencrypt` TLS termination, which requires the pod to serve HTTPS. Since the sample app only serves HTTP on port 9080, the CR sets `route.termination: edge` — TLS terminates at the OKD router and plain HTTP is forwarded to the pod. Without this, the Route will show "Application is not available".
+
 ```bash
 oc get routes -n liberty-apps
 ```
 
 Expected output:
 ```
-NAME                  HOST/PORT                                                      PATH   SERVICES              PORT
-nexusliberty-sample   nexusliberty-sample-liberty-apps.apps.nexuslab.nexuslab.local          nexusliberty-sample   9080-tcp
+NAME                  HOST/PORT                                                      PATH   SERVICES              PORT       TERMINATION
+nexusliberty-sample   nexusliberty-sample-liberty-apps.apps.nexuslab.nexuslab.local          nexusliberty-sample   9080-tcp   edge
 ```
 
-Test the app:
+**DNS:** Your workstation needs to resolve `*.apps.nexuslab.nexuslab.local` to the ingress VIP (`192.168.68.101`). Add to `/etc/hosts` (Linux/Mac) or `C:\Windows\System32\drivers\etc\hosts` (Windows):
+```
+192.168.68.101 nexusliberty-sample-liberty-apps.apps.nexuslab.nexuslab.local
+```
+
+Test the app (note: `edge` route requires HTTPS on the client side, use `-k` to skip cert validation):
 ```bash
-curl http://nexusliberty-sample-liberty-apps.apps.nexuslab.nexuslab.local/
+curl -k https://nexusliberty-sample-liberty-apps.apps.nexuslab.nexuslab.local/
 ```
 
 Test health endpoints:
 ```bash
-curl http://nexusliberty-sample-liberty-apps.apps.nexuslab.nexuslab.local/health/ready
-curl http://nexusliberty-sample-liberty-apps.apps.nexuslab.nexuslab.local/health/live
+curl -k https://nexusliberty-sample-liberty-apps.apps.nexuslab.nexuslab.local/health/ready
+curl -k https://nexusliberty-sample-liberty-apps.apps.nexuslab.nexuslab.local/health/live
 ```
 
 Both should return `{"status":"UP",...}`.

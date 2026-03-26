@@ -4,10 +4,16 @@ metadata:
   name: nexusliberty-sample
   namespace: liberty-apps
 spec:
+  license:
+    accept: true
+    edition: IBM WebSphere Application Server
+    productEntitlementSource: Standalone
   # Use IBM's official sample getting-started image to prove end-to-end
   applicationImage: icr.io/appcafe/open-liberty/samples/getting-started
   replicas: 1
   expose: true
+  route:
+    termination: edge
   service:
     port: 9080
   readinessProbe:
