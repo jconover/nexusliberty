@@ -21,7 +21,7 @@
     owner: "{{ was_user }}"
     group: "{{ was_group }}"
     mode: "0644"
-  notify: sync cluster config
+  notify: Sync cluster config
 
 - name: Deploy cluster resources.xml
   ansible.builtin.template:

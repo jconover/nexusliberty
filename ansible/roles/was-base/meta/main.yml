@@ -1,6 +1,6 @@
 ---
 galaxy_info:
-  role_name: was-base
+  role_name: was_base
   author: jconover
   description: IBM WebSphere Application Server ND base installation and configuration
   license: MIT

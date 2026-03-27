@@ -1,7 +1,7 @@
 ---
 # was-cluster/handlers/main.yml
 
-- name: sync cluster config
+- name: Sync cluster config
   ansible.builtin.debug:
     msg: >-
       ADMU0070I: Full resynchronization of node configurations initiated.

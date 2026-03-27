@@ -1,10 +1,12 @@
 ---
 # was-dmgr/handlers/main.yml
 
-- name: restart dmgr
+- name: Restart dmgr
   ansible.builtin.shell: |
+    set -e
     {{ was_profile_path }}/bin/stopManager.sh
     sleep 2
     {{ was_profile_path }}/bin/startManager.sh
   become: true
   become_user: "{{ was_user }}"
+  changed_when: true

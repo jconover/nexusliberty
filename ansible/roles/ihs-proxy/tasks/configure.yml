@@ -9,7 +9,7 @@
     group: "{{ was_group }}"
     mode: "0644"
     backup: true
-  notify: restart ihs
+  notify: Restart ihs
 
 - name: Deploy IHS landing page
   ansible.builtin.template:

@@ -1,6 +1,6 @@
 ---
 galaxy_info:
-  role_name: was-cluster
+  role_name: was_cluster
   author: jconover
   description: WAS ND cluster creation and member management
   license: MIT

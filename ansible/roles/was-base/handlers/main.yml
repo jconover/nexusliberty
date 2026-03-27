@@ -1,16 +1,16 @@
 ---
 # was-base/handlers/main.yml
 
-- name: display was version
+- name: Display was version
   ansible.builtin.command:
     cmd: "{{ was_home }}/bin/versionInfo.sh"
   become: true
   become_user: "{{ was_user }}"
   register: version_output
   changed_when: false
-  listen: display was version
+  listen: Display was version
 
-- name: show version output
+- name: Show version output
   ansible.builtin.debug:
     msg: "{{ version_output.stdout_lines }}"
-  listen: display was version
+  listen: Display was version

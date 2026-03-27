@@ -55,10 +55,10 @@
     group: "{{ was_group }}"
     mode: "0755"
   loop:
-    - { src: startNode.sh.j2,   dest: startNode.sh }
-    - { src: stopNode.sh.j2,    dest: stopNode.sh }
+    - { src: startNode.sh.j2, dest: startNode.sh }
+    - { src: stopNode.sh.j2, dest: stopNode.sh }
     - { src: startServer.sh.j2, dest: startServer.sh }
-    - { src: stopServer.sh.j2,  dest: stopServer.sh }
+    - { src: stopServer.sh.j2, dest: stopServer.sh }
 
 - name: Simulate federation to Deployment Manager
   ansible.builtin.template:

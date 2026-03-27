@@ -18,7 +18,7 @@
     owner: "{{ was_user }}"
     group: "{{ was_group }}"
     mode: "0644"
-  notify: display was version
+  notify: Display was version
 
 - name: Deploy mock versionInfo.sh
   ansible.builtin.template:

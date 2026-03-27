@@ -1,6 +1,6 @@
 ---
 galaxy_info:
-  role_name: was-dmgr
+  role_name: was_dmgr
   author: jconover
   description: WAS ND Deployment Manager profile creation and configuration
   license: MIT

@@ -1,6 +1,6 @@
 ---
 galaxy_info:
-  role_name: was-nodeagent
+  role_name: was_nodeagent
   author: jconover
   description: WAS ND managed node profile creation, federation, and node agent
   license: MIT

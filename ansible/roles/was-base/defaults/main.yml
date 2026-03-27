@@ -27,8 +27,6 @@ was_prereq_packages:
   - bind-utils
   - firewalld
   - libstdc++
-  - compat-libstdc++-33
-  - gtk2
   - libXtst
   - nss-softokn-freebl
 

@@ -1,6 +1,6 @@
 ---
 galaxy_info:
-  role_name: ihs-proxy
+  role_name: ihs_proxy
   author: jconover
   description: IBM HTTP Server installation and WebSphere plugin configuration
   license: MIT

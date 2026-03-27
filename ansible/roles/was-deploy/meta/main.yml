@@ -1,6 +1,6 @@
 ---
 galaxy_info:
-  role_name: was-deploy
+  role_name: was_deploy
   author: jconover
   description: WAS ND application deployment via wsadmin
   license: MIT
