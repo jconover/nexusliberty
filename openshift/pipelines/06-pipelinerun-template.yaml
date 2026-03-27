@@ -1,0 +1,33 @@
+---
+# Template PipelineRun — triggered by GitHub Actions or manually via:
+#   oc create -f openshift/pipelines/06-pipelinerun-template.yaml
+#   or: tkn pipeline start liberty-build-pipeline --use-param-defaults -w name=shared-workspace,claimName=liberty-pipeline-workspace ...
+#
+# NOTE: PipelineRun names must be unique. Use generateName or replace the
+# name with a unique value each run.
+apiVersion: tekton.dev/v1
+kind: PipelineRun
+metadata:
+  generateName: liberty-build-run-
+  namespace: liberty-apps
+spec:
+  pipelineRef:
+    name: liberty-build-pipeline
+  serviceAccountName: liberty-pipeline-sa
+  params:
+    - name: git-url
+      value: https://github.com/jconover/nexusliberty.git
+    - name: git-revision
+      value: main
+    - name: image-name
+      value: ghcr.io/jconover/nexusliberty-app
+  workspaces:
+    - name: shared-workspace
+      persistentVolumeClaim:
+        claimName: liberty-pipeline-workspace
+    - name: git-credentials
+      secret:
+        secretName: git-credentials
+    - name: docker-credentials
+      secret:
+        secretName: ghcr-credentials

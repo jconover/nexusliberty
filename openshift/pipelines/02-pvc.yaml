@@ -1,0 +1,13 @@
+---
+# Shared workspace PVC for pipeline tasks (source code, maven cache, built artifacts)
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: liberty-pipeline-workspace
+  namespace: liberty-apps
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi

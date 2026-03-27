@@ -1,0 +1,36 @@
+---
+# ServiceAccount for Tekton pipeline runs
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: liberty-pipeline-sa
+  namespace: liberty-apps
+---
+# Allow the pipeline SA to create deployments, manage images, etc.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: liberty-pipeline-edit
+  namespace: liberty-apps
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: edit
+subjects:
+  - kind: ServiceAccount
+    name: liberty-pipeline-sa
+    namespace: liberty-apps
+---
+# Allow pipeline SA to use the privileged SCC for buildah
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: liberty-pipeline-privileged
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:openshift:scc:privileged
+subjects:
+  - kind: ServiceAccount
+    name: liberty-pipeline-sa
+    namespace: liberty-apps

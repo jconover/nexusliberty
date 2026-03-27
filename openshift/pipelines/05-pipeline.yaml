@@ -1,0 +1,108 @@
+---
+# Liberty Build Pipeline
+# Clones the repo, builds with Maven, builds container image with buildah,
+# pushes to GHCR, and commits the updated image tag for ArgoCD
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: liberty-build-pipeline
+  namespace: liberty-apps
+spec:
+  params:
+    - name: git-url
+      description: Git repository URL
+      type: string
+      default: https://github.com/jconover/nexusliberty.git
+    - name: git-revision
+      description: Git revision (branch, tag, or commit SHA)
+      type: string
+      default: main
+    - name: image-name
+      description: Full image name (without tag)
+      type: string
+      default: ghcr.io/jconover/nexusliberty-app
+  workspaces:
+    - name: shared-workspace
+      description: Shared workspace for all tasks
+    - name: git-credentials
+      description: Git credentials for pushing manifest updates
+    - name: docker-credentials
+      description: Registry credentials for pushing images
+
+  tasks:
+    # Step 1: Clone the repository
+    - name: git-clone
+      taskRef:
+        kind: ClusterTask
+        name: git-clone
+      params:
+        - name: url
+          value: $(params.git-url)
+        - name: revision
+          value: $(params.git-revision)
+        - name: deleteExisting
+          value: "true"
+      workspaces:
+        - name: output
+          workspace: shared-workspace
+        - name: basic-auth
+          workspace: git-credentials
+
+    # Step 2: Build the Java app with Maven
+    - name: maven-build
+      taskRef:
+        kind: ClusterTask
+        name: maven
+      runAfter:
+        - git-clone
+      params:
+        - name: GOALS
+          value:
+            - -f
+            - app/pom.xml
+            - clean
+            - package
+            - -DskipTests
+        - name: MAVEN_IMAGE
+          value: maven:3.9-eclipse-temurin-21
+      workspaces:
+        - name: source
+          workspace: shared-workspace
+        - name: maven-settings
+          workspace: shared-workspace
+
+    # Step 3: Build and push the container image with buildah
+    - name: buildah-build-push
+      taskRef:
+        kind: ClusterTask
+        name: buildah
+      runAfter:
+        - maven-build
+      params:
+        - name: IMAGE
+          value: $(params.image-name):sha-$(tasks.git-clone.results.commit)
+        - name: DOCKERFILE
+          value: docker/liberty-app/Dockerfile
+        - name: CONTEXT
+          value: .
+        - name: TLSVERIFY
+          value: "true"
+      workspaces:
+        - name: source
+          workspace: shared-workspace
+        - name: dockerconfig
+          workspace: docker-credentials
+
+    # Step 4: Commit updated image tag back to repo (triggers ArgoCD)
+    - name: update-manifest
+      taskRef:
+        kind: Task
+        name: git-update-manifest
+      runAfter:
+        - buildah-build-push
+      params:
+        - name: image-tag
+          value: sha-$(tasks.git-clone.results.commit)
+      workspaces:
+        - name: source
+          workspace: shared-workspace

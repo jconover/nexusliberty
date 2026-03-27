@@ -217,8 +217,12 @@ nexusliberty/
 │
 ├── cluster/                           # OKD cluster configuration
 │   ├── install-config.yaml            # OKD installer config
+│   ├── oauth/
+│   │   └── htpasswd-oauth.yaml        # OAuth identity provider config
 │   ├── operators/
-│   │   └── websphere-liberty-operator.yaml
+│   │   ├── websphere-liberty-operator.yaml
+│   │   ├── openshift-pipelines-subscription.yaml
+│   │   └── builds-for-openshift-subscription.yaml
 │   └── rbac/                          # OKD RBAC configs
 │
 ├── ansible/                           # Ansible automation
@@ -253,6 +257,13 @@ nexusliberty/
 │   │   └── liberty-server-config.yaml
 │   ├── secrets/
 │   │   └── liberty-tls.yaml
+│   ├── pipelines/                                     # Tekton CI pipeline
+│   │   ├── 01-rbac.yaml                               # ServiceAccount + permissions
+│   │   ├── 02-pvc.yaml                                # Shared workspace PVC
+│   │   ├── 03-secrets.yaml                            # GHCR + Git credentials (template)
+│   │   ├── 04-task-git-update-manifest.yaml           # Custom task: commit image tag
+│   │   ├── 05-pipeline.yaml                           # Liberty build pipeline
+│   │   └── 06-pipelinerun-template.yaml               # PipelineRun template
 │   └── monitoring/
 │       ├── servicemonitor.yaml
 │       └── grafana-dashboard.yaml
@@ -320,9 +331,10 @@ nexusliberty/
 - [x] wsadmin Jython scripts for common admin tasks
 
 ### Phase 4 — CI/CD Pipeline ✅
-- [x] GitHub Actions: build Liberty image on push to main
-- [x] OpenShift GitOps (Argo CD): deploy to OKD via GitOps sync
+- [x] GitHub Actions: pre-merge quality gates (Maven build, unit tests, Dockerfile lint)
 - [x] GitHub Actions: Ansible lint on playbook changes
+- [x] Tekton/OpenShift Pipelines: on-cluster container build, push to GHCR, manifest update
+- [x] OpenShift GitOps (Argo CD): deploy to OKD via GitOps sync
 - [x] Health check via Argo CD self-heal + Liberty readiness/liveness probes
 - [x] README badges (build status, Ansible lint status)
 
