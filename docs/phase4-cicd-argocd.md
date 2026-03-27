@@ -1,6 +1,6 @@
-# Phase 4: CI/CD Pipeline with GitHub Actions and Argo CD
+# Phase 4: CI/CD Pipeline — GitHub Actions + Tekton + Argo CD
 
-Step-by-step guide to set up the CI/CD pipeline: GitHub Actions for building Liberty container images (CI) and OpenShift GitOps / Argo CD for automated deployment to OKD (CD).
+Step-by-step guide to set up the enterprise CI/CD pipeline: GitHub Actions for pre-merge quality gates, Tekton (OpenShift Pipelines) for on-cluster container builds, and Argo CD for GitOps deployment to OKD.
 
 ## Prerequisites
 
@@ -9,274 +9,314 @@ Step-by-step guide to set up the CI/CD pipeline: GitHub Actions for building Lib
 - GitHub repository with push access (`github.com/jconover/nexusliberty`)
 - GHCR (GitHub Container Registry) accessible from OKD nodes
 
-## What We're Building
+## Architecture
 
 ```
-┌──────────────────────────────────────────────────────────────────┐
-│                        CI (GitHub Actions)                       │
-│                                                                  │
-│  Push to main ──→ Build Liberty image ──→ Push to GHCR           │
-│  (app/ or docker/)   (Dockerfile)          (sha-<commit> tag)    │
-│                                                                  │
-│                  ──→ Commit updated image tag to manifest         │
-└─────────────────────────────┬────────────────────────────────────┘
-                              │ git push (updated YAML)
-                              ▼
-┌──────────────────────────────────────────────────────────────────┐
-│                     CD (Argo CD on OKD)                          │
-│                                                                  │
-│  Watches repo ──→ Detects manifest change ──→ Syncs to cluster   │
-│  (openshift/)     (new image tag)             (liberty-apps ns)  │
-│                                                                  │
-│  Self-heal: if someone manually changes a resource, Argo CD      │
-│  reverts it to match Git (single source of truth)                │
-└──────────────────────────────────────────────────────────────────┘
+GitHub Actions          Tekton/OpenShift Pipelines      ArgoCD
+──────────────          ──────────────────────────      ──────
+Code quality gates  →   Build Liberty container     →   Deploy to OKD
+Ansible lint            Run tests                       GitOps sync
+Unit tests              Push to GHCR                    Health checks
+Dockerfile lint         Commit updated image tag        Self-heal / Rollback
 ```
 
-## Step 1 — Verify the Build Workflow
+### How It Flows
 
-The build workflow (`.github/workflows/liberty-build.yml`) already exists and triggers on pushes to `main` that touch `docker/liberty-app/` or `app/`.
+```
+Developer pushes PR
+  → GitHub Actions: lint, unit tests, Dockerfile lint (pre-merge gates)
+  → PR approved + merged to main
+
+Merge to main
+  → GitHub Actions: quality gates pass
+  → GitHub Actions: triggers Tekton PipelineRun via oc CLI
+  → Tekton Pipeline (runs on OKD cluster):
+      1. git-clone — checkout repo
+      2. maven-build — compile + package the Java app
+      3. buildah — build container image + push to GHCR
+      4. git-update-manifest — commit new image tag to repo
+  → ArgoCD detects manifest change in Git
+  → ArgoCD syncs deployment to liberty-apps namespace
+  → Health checks confirm rollout
+```
+
+This separation keeps:
+- **Quality gates** in GitHub (fast, cloud-hosted, runs on every PR)
+- **Container builds** inside the cluster security boundary (Tekton)
+- **Deployments** driven by Git as single source of truth (ArgoCD)
+
+---
+
+## Step 1 — Install OpenShift Pipelines Operator
+
+The OpenShift Pipelines operator provides Tekton on the cluster.
 
 ```bash
-# Check the workflow file exists
-cat .github/workflows/liberty-build.yml
+# Apply the subscription (you may have already done this via OperatorHub UI)
+oc apply -f cluster/operators/openshift-pipelines-subscription.yaml
 
-# Check recent workflow runs on GitHub
-gh run list --workflow=liberty-build.yml --limit 5
+# Watch for the operator to install (~2-3 minutes)
+oc get csv -n openshift-operators -w
+# Expected: openshift-pipelines-operator-rh.v1.x.x   Succeeded
+
+# Verify Tekton pipelines are available
+oc get pods -n openshift-pipelines
+tkn version  # If tkn CLI is installed
 ```
 
-### What the build workflow does
+## Step 2 — Install Builds for Red Hat OpenShift Operator (Optional)
 
-1. Checks out the repo
-2. Logs into GHCR
-3. Builds the Liberty Docker image (multi-stage: Maven build + Open Liberty runtime)
-4. Pushes to `ghcr.io/jconover/nexusliberty-app` with tags: `sha-<commit>`, `main`, `latest`
-5. Updates `openshift/liberty-deployment/WebSphereLibertyApplication.yaml` with the new `sha-<commit>` tag
-6. Commits and pushes the manifest change back to the repo
-
-This commit is what triggers Argo CD to sync the new image to the cluster.
-
-## Step 2 — Verify the Ansible Lint Workflow
-
-The Ansible lint workflow (`.github/workflows/ansible-lint.yml`) triggers on pushes or PRs that touch `ansible/`.
+Provides the Shipwright Build API for declarative image builds. Useful alongside Tekton for additional build strategies.
 
 ```bash
-# Check the workflow
-cat .github/workflows/ansible-lint.yml
+oc apply -f cluster/operators/builds-for-openshift-subscription.yaml
 
-# Trigger a test run (make a trivial change to an ansible file)
-# Or check runs:
-gh run list --workflow=ansible-lint.yml --limit 5
+# Watch for install
+oc get csv -n openshift-operators -w
+# Expected: builds-for-openshift-operator.v1.x.x   Succeeded
 ```
 
-## Step 3 — Install OpenShift GitOps Operator
-
-This installs Argo CD on your OKD cluster via the OperatorHub.
+## Step 3 — Install OpenShift GitOps Operator (Argo CD)
 
 ```bash
 # Apply the operator subscription
 oc apply -f cluster/gitops/openshift-gitops-subscription.yaml
 
-# Watch the operator install (takes ~2-3 minutes)
+# Watch the operator install (~2-3 minutes)
 oc get csv -n openshift-operators -w
-
 # Expected: openshift-gitops-operator.v1.x.x   Succeeded
-# Press Ctrl+C once you see Succeeded
 ```
 
-### Verify the operator is running
+### Verify Argo CD is running
 
 ```bash
-# Check the GitOps namespace was created
+# Check the GitOps namespace
 oc get namespace openshift-gitops
 
-# Check Argo CD pods are running
+# Check Argo CD pods
 oc get pods -n openshift-gitops
-
-# Expected pods (all Running):
-#   openshift-gitops-application-controller-...
-#   openshift-gitops-applicationset-controller-...
-#   openshift-gitops-dex-server-...
-#   openshift-gitops-redis-...
-#   openshift-gitops-repo-server-...
-#   openshift-gitops-server-...
+# All pods should be Running
 ```
 
 ### Get the Argo CD admin password
 
 ```bash
-# The initial admin password is stored in a secret
 oc extract secret/openshift-gitops-cluster -n openshift-gitops --to=-
-
-# Save it somewhere safe — you'll need it for the Argo CD UI
 ```
 
 ### Access the Argo CD UI
 
 ```bash
-# Get the Route URL
 oc get route openshift-gitops-server -n openshift-gitops -o jsonpath='{.spec.host}'
-
 # Expected: openshift-gitops-server-openshift-gitops.apps.nexuslab.nexuslab.local
 ```
 
-Open in browser: `https://openshift-gitops-server-openshift-gitops.apps.nexuslab.nexuslab.local`
-- Username: `admin`
-- Password: (from the secret above)
+Open in browser with the admin credentials above.
 
-## Step 4 — Apply RBAC for Liberty CRDs
+## Step 4 — Set Up Tekton Pipeline Resources
 
-Argo CD needs permission to manage WebSphereLibertyApplication resources. The default ClusterRole doesn't include IBM's CRDs.
+Apply the Tekton resources in order. The numbered filenames ensure correct dependency ordering.
+
+### 4a — RBAC (ServiceAccount + permissions)
 
 ```bash
-# Apply the ClusterRole and ClusterRoleBinding
+oc apply -f openshift/pipelines/01-rbac.yaml
+
+# Verify
+oc get serviceaccount liberty-pipeline-sa -n liberty-apps
+oc get rolebinding liberty-pipeline-edit -n liberty-apps
+```
+
+### 4b — Workspace PVC
+
+```bash
+oc apply -f openshift/pipelines/02-pvc.yaml
+
+# Verify
+oc get pvc liberty-pipeline-workspace -n liberty-apps
+```
+
+### 4c — Secrets (GHCR + Git credentials)
+
+**Before applying**, copy the example file and add your real token:
+```bash
+cp openshift/pipelines/03-secrets.yaml.example openshift/pipelines/03-secrets.yaml
+```
+
+Edit `openshift/pipelines/03-secrets.yaml` and replace `<GITHUB_PAT>` with a personal access token:
+- Token needs scopes: `write:packages` (GHCR push) and `repo` or `contents:write` (Git push)
+- Generate at: Settings → Developer Settings → Personal Access Tokens → Fine-grained tokens
+- The real secrets file is gitignored — only the `.example` template is committed
+
+```bash
+oc apply -f openshift/pipelines/03-secrets.yaml
+
+# Link secrets to the pipeline ServiceAccount
+oc secrets link liberty-pipeline-sa ghcr-credentials --for=pull,mount -n liberty-apps
+oc secrets link liberty-pipeline-sa git-credentials -n liberty-apps
+
+# Verify
+oc get secrets -n liberty-apps | grep -E 'ghcr|git'
+```
+
+> **Important:** Do not commit the secrets file with real tokens. Either use `oc create secret` directly or use sealed-secrets/external-secrets in production.
+
+### 4d — Custom Task (git-update-manifest)
+
+```bash
+oc apply -f openshift/pipelines/04-task-git-update-manifest.yaml
+
+# Verify
+oc get task git-update-manifest -n liberty-apps
+```
+
+### 4e — Pipeline
+
+```bash
+oc apply -f openshift/pipelines/05-pipeline.yaml
+
+# Verify
+oc get pipeline liberty-build-pipeline -n liberty-apps
+
+# Check available ClusterTasks (provided by OpenShift Pipelines operator)
+oc get clustertask | grep -E 'git-clone|maven|buildah'
+```
+
+## Step 5 — Apply Argo CD RBAC and Application
+
+### RBAC for Liberty CRDs
+
+```bash
 oc apply -f cluster/gitops/argocd-rbac.yaml
 
-# Verify the role was created
+# Verify
 oc get clusterrole argocd-liberty-operator-manager
-oc get clusterrolebinding argocd-liberty-operator-manager-binding
 ```
 
-## Step 5 — Create the Argo CD Application
-
-This tells Argo CD to watch the `openshift/liberty-deployment/` directory in the GitHub repo and sync it to the `liberty-apps` namespace.
+### Create the Argo CD Application
 
 ```bash
-# Apply the Application CR
 oc apply -f cluster/gitops/argocd-nexusliberty-app.yaml
 
-# Check the application was created
+# Verify
 oc get application -n openshift-gitops
-
-# Expected:
-# NAME               SYNC STATUS   HEALTH STATUS
-# nexusliberty-app   Synced        Healthy
+# Expected: nexusliberty-app   Synced   Healthy
 ```
 
-### Verify in the Argo CD UI
+## Step 6 — Configure GitHub Secrets
 
-1. Open the Argo CD UI (URL from Step 3)
-2. You should see `nexusliberty-app` in the application list
-3. Click it — you'll see the resource tree:
-   - `WebSphereLibertyApplication/nexusliberty-app`
-   - Any child resources (Deployment, Service, Route) created by the Liberty Operator
-4. Status should show **Synced** and **Healthy**
+The GitHub Actions workflow needs these secrets to trigger Tekton:
 
-### Verify the app is running
+| Secret | Value |
+|---|---|
+| `OKD_SERVER_URL` | `https://api.nexuslab.nexuslab.local:6443` |
+| `OKD_TOKEN` | Service account token with pipeline permissions |
+
+To get a long-lived token:
+```bash
+# Create a token for the pipeline SA
+oc create token liberty-pipeline-sa -n liberty-apps --duration=8760h
+# Copy the output and set it as the OKD_TOKEN secret in GitHub
+```
+
+Set these at: GitHub repo → Settings → Secrets and variables → Actions
+
+## Step 7 — Test the Full Pipeline
+
+### Manual test (Tekton only)
 
 ```bash
-# Check the Liberty pods
+# Trigger a PipelineRun directly
+oc create -f openshift/pipelines/06-pipelinerun-template.yaml -n liberty-apps
+
+# Watch it run
+tkn pipelinerun logs -f -n liberty-apps
+# Or via oc:
+oc get pipelinerun -n liberty-apps -w
+
+# Check each task's status
+tkn pipelinerun describe $(tkn pipelinerun list -n liberty-apps --limit 1 -o name) -n liberty-apps
+```
+
+### End-to-end test (GitHub Actions → Tekton → ArgoCD)
+
+```bash
+# 1. Make a change to the app
+echo "// CI/CD pipeline test" >> app/src/main/java/io/openliberty/sample/system/SystemResource.java
+
+# 2. Commit and push
+git add app/
+git commit -m "test: trigger full CI/CD pipeline"
+git push origin main
+
+# 3. Watch GitHub Actions
+gh run watch
+
+# 4. After GHA triggers Tekton, watch the PipelineRun
+tkn pipelinerun logs -f -n liberty-apps
+
+# 5. After Tekton commits the image tag, watch ArgoCD sync
+oc get application nexusliberty-app -n openshift-gitops -w
+
+# 6. Verify the new pod rolled out
 oc get pods -n liberty-apps
-
-# Check the Route
-oc get route -n liberty-apps
-
-# Hit the health endpoint
 ROUTE=$(oc get route nexusliberty-app -n liberty-apps -o jsonpath='{.spec.host}')
 curl -k https://${ROUTE}/health/ready
 ```
 
-## Step 6 — Test the Full CI/CD Flow
+## Step 8 — Verify README Badges
 
-Make a change to the app or Docker config and watch it flow through the entire pipeline.
-
-```bash
-# 1. Make a trivial change (e.g., bump a comment in server.xml)
-echo "<!-- CI/CD test $(date) -->" >> docker/liberty-app/server.xml
-
-# 2. Commit and push to main
-git add docker/liberty-app/server.xml
-git commit -m "test: trigger CI/CD pipeline"
-git push origin main
-
-# 3. Watch the GitHub Actions build
-gh run watch
-
-# 4. After the build completes, check the manifest was updated
-git pull
-grep applicationImage openshift/liberty-deployment/WebSphereLibertyApplication.yaml
-# Should show: applicationImage: ghcr.io/jconover/nexusliberty-app:sha-<new-commit>
-
-# 5. Watch Argo CD sync (in the UI or via CLI)
-# Argo CD polls every 3 minutes by default, or you can force a sync:
-oc get application nexusliberty-app -n openshift-gitops -o jsonpath='{.status.sync.status}'
-# Expected: Synced
-
-# 6. Verify the new pod rolled out
-oc get pods -n liberty-apps
-oc rollout status deployment/nexusliberty-app -n liberty-apps
-```
-
-## Step 7 — Verify README Badges
-
-After the workflows have run at least once, check that badges render on GitHub:
-
-1. Go to `https://github.com/jconover/nexusliberty`
-2. You should see two badges at the top of the README:
-   - **Build and Push Liberty Image** — green if the last build passed
-   - **Ansible Lint** — green if linting passed
+After the workflows run, check badges at `https://github.com/jconover/nexusliberty`:
+- **Liberty CI** — green if quality gates + Tekton trigger passed
+- **Ansible Lint** — green if linting passed
 
 ## Architecture Summary
 
-| Component | Where it runs | What it does |
+| Component | Where It Runs | What It Does |
 |---|---|---|
-| `liberty-build.yml` | GitHub Actions (cloud) | Builds Liberty image, pushes to GHCR, updates manifest |
+| `liberty-build.yml` (quality-gates job) | GitHub Actions (cloud) | Maven build, unit tests, Dockerfile lint |
+| `liberty-build.yml` (trigger-tekton job) | GitHub Actions (cloud) | Authenticates to OKD, creates PipelineRun |
 | `ansible-lint.yml` | GitHub Actions (cloud) | Lints Ansible playbooks on changes |
-| OpenShift GitOps Operator | OKD cluster (`openshift-gitops` ns) | Manages Argo CD lifecycle |
-| Argo CD Application CR | OKD cluster | Watches GitHub repo, syncs manifests to `liberty-apps` |
-| RBAC (ClusterRole) | OKD cluster | Grants Argo CD permission for Liberty CRDs |
+| OpenShift Pipelines Operator | OKD cluster | Manages Tekton lifecycle |
+| `liberty-build-pipeline` | OKD cluster (liberty-apps) | git-clone → maven → buildah → push → commit tag |
+| OpenShift GitOps Operator | OKD cluster | Manages Argo CD lifecycle |
+| Argo CD Application | OKD cluster | Watches GitHub repo, syncs manifests to liberty-apps |
 
 ## Troubleshooting
 
-**Argo CD Application shows "OutOfSync"**
-- Check if the manifest in Git matches what's deployed:
-  ```bash
-  oc get application nexusliberty-app -n openshift-gitops -o yaml | grep -A5 status
-  ```
-- Force a sync: click **Sync** in the Argo CD UI, or:
-  ```bash
-  # Install argocd CLI (optional)
-  # Or just delete and re-apply the Application CR
-  oc delete application nexusliberty-app -n openshift-gitops
-  oc apply -f cluster/gitops/argocd-nexusliberty-app.yaml
-  ```
+**PipelineRun fails at git-clone**
+- Check git-credentials secret is correct: `oc get secret git-credentials -n liberty-apps -o yaml`
+- Verify the repo URL is accessible from the cluster: `oc run test --rm -it --image=alpine/git -- git ls-remote https://github.com/jconover/nexusliberty.git`
 
-**Argo CD can't reach the GitHub repo**
-- The repo is public, so no auth is needed
-- If you made it private, add a repo secret in Argo CD:
-  Settings → Repositories → Connect Repo → HTTPS → add a GitHub PAT
+**PipelineRun fails at buildah**
+- Check the pipeline SA has privileged SCC: `oc get clusterrolebinding liberty-pipeline-privileged`
+- Check GHCR credentials: `oc get secret ghcr-credentials -n liberty-apps`
+- If permission denied on `/var/lib/containers`, the SCC binding may need reapply
 
-**Build workflow doesn't commit the manifest update**
-- Check the workflow has `contents: write` permission
-- Check the `GITHUB_TOKEN` has push access (default for same-repo workflows)
-- Review the workflow run logs: `gh run view --log`
+**PipelineRun fails at maven-build**
+- Check PVC has enough space: `oc get pvc liberty-pipeline-workspace -n liberty-apps`
+- Check Maven image can resolve dependencies (network access to Maven Central)
 
-**Liberty pod fails to pull the new image**
-- Check GHCR image visibility: `gh api user/packages/container/nexusliberty-app/versions --jq '.[0].metadata.container.tags'`
-- If GHCR package is private, create an image pull secret:
-  ```bash
-  oc create secret docker-registry ghcr-pull \
-    --docker-server=ghcr.io \
-    --docker-username=jconover \
-    --docker-password=<GITHUB_PAT> \
-    -n liberty-apps
-  oc secrets link default ghcr-pull --for=pull -n liberty-apps
-  ```
+**PipelineRun fails at git-update-manifest**
+- Token needs `contents:write` or `repo` scope
+- Check the git-credentials secret matches GitHub PAT
 
-**Argo CD UI not accessible**
-- Check the Route: `oc get route -n openshift-gitops`
-- Check DNS resolves: `nslookup openshift-gitops-server-openshift-gitops.apps.nexuslab.nexuslab.local`
-- Try port-forward as a fallback:
-  ```bash
-  oc port-forward svc/openshift-gitops-server -n openshift-gitops 8443:443
-  # Then open https://localhost:8443
-  ```
+**GitHub Actions can't reach OKD API**
+- Your cluster is behind NAT — GHA needs a route to `api.nexuslab.nexuslab.local:6443`
+- Options: Cloudflare Tunnel, port forwarding on router, or self-hosted runner on your network
 
-**Operator install fails (no redhat-operators catalog)**
-- OKD uses `community-operators` instead of `redhat-operators`. If on OKD (not OpenShift):
-  ```bash
-  # Install vanilla Argo CD instead:
-  oc new-project argocd
-  oc apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
-  ```
-  Then update the Application CR namespace from `openshift-gitops` to `argocd`.
+**ArgoCD shows OutOfSync after Tekton commits**
+- ArgoCD polls every 3 minutes by default — wait or force sync in the UI
+- Check Argo CD can reach the repo: Settings → Repositories in Argo CD UI
+
+**ArgoCD can't manage Liberty CRDs**
+- Verify RBAC: `oc get clusterrole argocd-liberty-operator-manager`
+- Re-apply: `oc apply -f cluster/gitops/argocd-rbac.yaml`
+
+## What's Next (Phase 5)
+
+With the CI/CD pipeline complete, Phase 5 adds HA and observability:
+- Liberty clustering with session replication
+- IHS load balancing across Liberty instances
+- Prometheus metrics from Liberty (mpMetrics)
+- Grafana dashboard for JVM/request metrics

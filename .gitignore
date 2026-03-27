@@ -1,3 +1,4 @@
 CLAUDE.private.md
 .omc/
 app/target/
+openshift/pipelines/03-secrets.yaml

@@ -1,0 +1,14 @@
+---
+# Builds for Red Hat OpenShift Operator
+# Provides Shipwright Build API for declarative container image builds
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: builds-for-openshift-operator
+  namespace: openshift-operators
+spec:
+  channel: candidate
+  name: builds-for-openshift-operator
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+  installPlanApproval: Automatic

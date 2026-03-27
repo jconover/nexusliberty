@@ -1,0 +1,50 @@
+---
+# Custom task: commit the updated image tag back to the repo
+# This is what triggers ArgoCD to sync the new deployment
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: git-update-manifest
+  namespace: liberty-apps
+spec:
+  params:
+    - name: image-tag
+      description: The new image tag (sha-xxxxxxx)
+      type: string
+    - name: manifest-path
+      description: Path to the manifest file to update
+      type: string
+      default: openshift/liberty-deployment/WebSphereLibertyApplication.yaml
+    - name: git-user-name
+      description: Git commit author name
+      type: string
+      default: tekton-pipeline
+    - name: git-user-email
+      description: Git commit author email
+      type: string
+      default: tekton@nexusliberty.local
+  workspaces:
+    - name: source
+      description: Workspace with the cloned repo
+  steps:
+    - name: update-and-push
+      image: alpine/git:latest
+      workingDir: $(workspaces.source.path)
+      script: |
+        #!/bin/sh
+        set -e
+
+        echo "Updating manifest with image tag: $(params.image-tag)"
+        sed -i "s|applicationImage: ghcr.io/jconover/nexusliberty-app:.*|applicationImage: ghcr.io/jconover/nexusliberty-app:$(params.image-tag)|" \
+          $(params.manifest-path)
+
+        git config user.name "$(params.git-user-name)"
+        git config user.email "$(params.git-user-email)"
+
+        git add $(params.manifest-path)
+        if git diff --staged --quiet; then
+          echo "No changes to commit"
+        else
+          git commit -m "ci: update Liberty image tag to $(params.image-tag) [tekton]"
+          git push origin HEAD:main
+        fi
