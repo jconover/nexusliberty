@@ -9,7 +9,7 @@ on:
       - 'app/**'
 
 permissions:
-  contents: read
+  contents: write
   packages: write
 
 jobs:
@@ -19,6 +19,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
@@ -45,3 +47,17 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Update manifest with new image tag
+        run: |
+          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
+          sed -i "s|applicationImage: ghcr.io/jconover/nexusliberty-app:.*|applicationImage: ghcr.io/jconover/nexusliberty-app:sha-${SHORT_SHA}|" \
+            openshift/liberty-deployment/WebSphereLibertyApplication.yaml
+
+      - name: Commit updated manifest
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add openshift/liberty-deployment/WebSphereLibertyApplication.yaml
+          git diff --staged --quiet || git commit -m "ci: update Liberty image tag to sha-$(echo '${{ github.sha }}' | cut -c1-7)"
+          git push

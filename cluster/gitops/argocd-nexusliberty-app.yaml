@@ -1,0 +1,38 @@
+---
+# Argo CD Application for NexusLiberty
+# Apply after OpenShift GitOps operator is installed and ready:
+#   oc apply -f cluster/gitops/argocd-nexusliberty-app.yaml
+#
+# This tells Argo CD to watch the openshift/liberty-deployment/ directory
+# in the GitHub repo and sync changes to the liberty-apps namespace.
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: nexusliberty-app
+  namespace: openshift-gitops
+spec:
+  project: default
+
+  source:
+    repoURL: https://github.com/jconover/nexusliberty.git
+    targetRevision: main
+    path: openshift/liberty-deployment
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: liberty-apps
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=false
+      - ApplyOutOfSyncOnly=true
+    retry:
+      limit: 3
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m

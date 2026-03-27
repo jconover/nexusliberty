@@ -319,12 +319,12 @@ nexusliberty/
 - [x] Ansible playbook: IHS install + WebSphere plugin config
 - [x] wsadmin Jython scripts for common admin tasks
 
-### Phase 4 — CI/CD Pipeline
+### Phase 4 — CI/CD Pipeline ✅
 - [x] GitHub Actions: build Liberty image on push to main
-- [ ] GitHub Actions: deploy to OKD on successful build
-- [ ] GitHub Actions: Ansible lint on playbook changes
-- [ ] Add health check step post-deploy
-- [ ] README badges (build status, deploy status)
+- [x] OpenShift GitOps (Argo CD): deploy to OKD via GitOps sync
+- [x] GitHub Actions: Ansible lint on playbook changes
+- [x] Health check via Argo CD self-heal + Liberty readiness/liveness probes
+- [x] README badges (build status, Ansible lint status)
 
 ### Phase 5 — HA and Operations (Stretch)
 - [ ] Liberty clustering config (session replication)
