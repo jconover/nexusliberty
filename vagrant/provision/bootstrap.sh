@@ -24,7 +24,7 @@ groupadd -f wasgrp
 id wasadmin &>/dev/null || useradd -g wasgrp -m -s /bin/bash wasadmin
 
 # Create standard IBM directory structure
-mkdir -p /opt/IBM/WebSphere/AppServer
+mkdir -p /opt/IBM/WebSphere/AppServer/properties
 mkdir -p /opt/IBM/WebSphere/Plugins
 mkdir -p /opt/IBM/HTTPServer
 mkdir -p /opt/IBM/InstallationManager
