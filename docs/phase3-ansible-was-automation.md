@@ -53,11 +53,11 @@ vagrant up nexus-ihs
 # Verify all VMs are running
 vagrant status
 
-# Expected output:
-# nexus-dmgr    running (virtualbox)
-# nexus-was1    running (virtualbox)
-# nexus-was2    running (virtualbox)
-# nexus-ihs     running (virtualbox)
+# Expected output (provider may be virtualbox or libvirt):
+# nexus-dmgr    running (libvirt)
+# nexus-was1    running (libvirt)
+# nexus-was2    running (libvirt)
+# nexus-ihs     running (libvirt)
 ```
 
 ### Verify SSH access
@@ -219,11 +219,12 @@ vagrant ssh nexus-ihs -c "cat /opt/IBM/HTTPServer/conf/httpd.conf"
 # Check plugin-cfg.xml routes to both AppServers
 vagrant ssh nexus-ihs -c "cat /opt/IBM/WebSphere/Plugins/config/webserver1/plugin-cfg.xml"
 
-# Check IHS status
+# Check IHS status (mock — prints simulated output, no real httpd process)
 vagrant ssh nexus-ihs -c "sudo -u wasadmin /opt/IBM/HTTPServer/bin/apachectl status"
 
-# View the landing page (from your workstation)
-curl http://192.168.56.13/ 2>/dev/null | head -5
+# Note: This is a simulated environment — there is no real HTTP server process.
+# The curl test below would work on a real IHS install but not in this simulation.
+# Verify the config files above to confirm the automation is correct.
 ```
 
 ## Step 7 — Run All Playbooks End-to-End
