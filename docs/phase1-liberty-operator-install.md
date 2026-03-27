@@ -10,6 +10,81 @@ Step-by-step guide to install the IBM WebSphere Liberty Operator on OKD and depl
   oc login https://api.nexuslab.nexuslab.local:6443 --username kubeadmin --password <password>
   ```
 
+## Step 0: Configure OAuth and Create an Admin User
+
+The Assisted Installer creates a temporary `kubeadmin` account. Replace it with a proper admin user via htpasswd OAuth.
+
+### Create htpasswd credentials
+
+```bash
+# Install htpasswd if not available
+sudo apt install -y apache2-utils   # Ubuntu/Debian
+# sudo dnf install -y httpd-tools   # RHEL/Fedora
+
+# Create htpasswd file with your admin user
+htpasswd -c -B -b /tmp/htpasswd admin <your-password>
+
+# Create the secret in OpenShift
+oc create secret generic htpass-secret \
+  --from-file=htpasswd=/tmp/htpasswd \
+  -n openshift-config
+
+# Clean up the local file
+rm /tmp/htpasswd
+```
+
+### Apply the OAuth configuration
+
+Create `cluster/oauth/htpasswd-oauth.yaml`:
+```yaml
+apiVersion: config.openshift.io/v1
+kind: OAuth
+metadata:
+  name: cluster
+spec:
+  identityProviders:
+    - name: htpasswd
+      mappingMethod: claim
+      type: HTPasswd
+      htpasswd:
+        fileData:
+          name: htpass-secret
+```
+
+```bash
+oc apply -f cluster/oauth/htpasswd-oauth.yaml
+```
+
+Wait for the oauth pods to redeploy (~1-2 minutes):
+```bash
+oc get pods -n openshift-authentication -w
+```
+
+### Grant cluster-admin to your new user
+
+```bash
+oc adm policy add-cluster-role-to-user cluster-admin admin
+```
+
+### Verify login with the new user
+
+```bash
+oc login https://api.<cluster>.<domain>:6443 --username admin --password <your-password>
+oc whoami
+# Should return: admin
+```
+
+### (Optional) Remove kubeadmin
+
+Once you've confirmed the new admin user works:
+```bash
+oc delete secret kubeadmin -n kube-system
+```
+
+> **Warning:** Only do this after verifying your new admin login works. There is no way to recover `kubeadmin` after deletion.
+
+---
+
 ## Step 1: Create the liberty-apps namespace
 
 ```bash
