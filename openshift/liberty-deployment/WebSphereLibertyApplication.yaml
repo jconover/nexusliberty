@@ -1,21 +1,27 @@
 apiVersion: liberty.websphere.ibm.com/v1
 kind: WebSphereLibertyApplication
 metadata:
-  name: nexusliberty-sample
+  name: nexusliberty-app
   namespace: liberty-apps
 spec:
   license:
     accept: true
     edition: IBM WebSphere Application Server
     productEntitlementSource: Standalone
-  # Use IBM's official sample getting-started image to prove end-to-end
-  applicationImage: icr.io/appcafe/open-liberty/samples/getting-started
+  applicationImage: ghcr.io/jconover/nexusliberty-app:latest
   replicas: 1
   expose: true
   route:
     termination: edge
   service:
     port: 9080
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
   readinessProbe:
     httpGet:
       path: /health/ready

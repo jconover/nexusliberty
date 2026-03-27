@@ -1,0 +1,12 @@
+.git
+docs/
+vagrant/
+ansible/
+terraform/
+openshift/
+scripts/
+cluster/
+.github/
+.omc/
+node_modules/
+*.md
