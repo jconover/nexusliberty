@@ -311,13 +311,13 @@ nexusliberty/
 - [x] Expose via OpenShift Route
 - [x] Validate app accessible via Route URL
 
-### Phase 3 — Ansible WAS Automation
-- [ ] Vagrant environment simulating WAS ND nodes
-- [ ] Ansible playbook: WAS base install and configuration
-- [ ] Ansible playbook: cluster creation (DM + managed nodes)
-- [ ] Ansible playbook: application deployment via wsadmin
-- [ ] Ansible playbook: IHS install + WebSphere plugin config
-- [ ] wsadmin Jython scripts for common admin tasks
+### Phase 3 — Ansible WAS Automation ✅
+- [x] Vagrant environment simulating WAS ND nodes
+- [x] Ansible playbook: WAS base install and configuration
+- [x] Ansible playbook: cluster creation (DM + managed nodes)
+- [x] Ansible playbook: application deployment via wsadmin
+- [x] Ansible playbook: IHS install + WebSphere plugin config
+- [x] wsadmin Jython scripts for common admin tasks
 
 ### Phase 4 — CI/CD Pipeline
 - [x] GitHub Actions: build Liberty image on push to main
