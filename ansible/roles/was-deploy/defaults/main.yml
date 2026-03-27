@@ -1,0 +1,16 @@
+---
+# was-deploy role defaults
+
+app_name: nexus-app
+app_war: nexus-app.war
+app_context_root: /app
+app_source_dir: /opt/IBM/apps
+cluster_name: nexusliberty_cluster
+
+# wsadmin script location (on Ansible controller)
+wsadmin_scripts_dir: "{{ playbook_dir }}/../../scripts/wsadmin"
+
+# Deployment options
+deploy_force_update: false
+deploy_start_after: true
+deploy_verify_after: true

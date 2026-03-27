@@ -1,0 +1,118 @@
+---
+# was-cluster.yml — WAS ND Cell Configuration Playbook
+#
+# Creates the full WAS ND cell topology:
+#   1. Deployment Manager profile on nexus-dmgr
+#   2. AppSrv profiles on managed nodes, federated to Dmgr
+#   3. Cluster definition with both AppServers as members
+#
+# Usage:
+#   ansible-playbook -i inventory/hosts.ini playbooks/was-cluster.yml
+#   ansible-playbook -i inventory/hosts.ini playbooks/was-cluster.yml --tags dmgr-profile
+#   ansible-playbook -i inventory/hosts.ini playbooks/was-cluster.yml --tags federation
+#   ansible-playbook -i inventory/hosts.ini playbooks/was-cluster.yml --tags cluster-create
+#
+# Prerequisites:
+#   - was-install.yml has been run (WAS base is installed on all nodes)
+
+# --- Play 1: Create Deployment Manager profile ---
+- name: Create Deployment Manager Profile
+  hosts: dmgr
+  become: true
+  gather_facts: true
+  tags: [dmgr-profile]
+
+  pre_tasks:
+    - name: Validate WAS base installation
+      ansible.builtin.stat:
+        path: "{{ was_home }}/bin/wsadmin.sh"
+      register: was_check
+      failed_when: not was_check.stat.exists
+      tags: [always]
+
+  roles:
+    - role: was-dmgr
+      tags: [dmgr-profile]
+
+  post_tasks:
+    - name: Verify Dmgr profile created
+      ansible.builtin.stat:
+        path: "{{ was_home }}/profiles/Dmgr01/config/cells/{{ cell_name }}/cell.xml"
+      register: cell_check
+
+    - name: Assert Dmgr profile exists
+      ansible.builtin.assert:
+        that: cell_check.stat.exists
+        success_msg: "Dmgr profile created — cell {{ cell_name }} is active"
+        fail_msg: "Dmgr profile creation failed"
+
+# --- Play 2: Create AppSrv profiles and federate managed nodes ---
+- name: Federate Managed Nodes to Cell
+  hosts: was_nodes
+  become: true
+  gather_facts: true
+  serial: 1
+  tags: [federation]
+
+  pre_tasks:
+    - name: Validate WAS base installation
+      ansible.builtin.stat:
+        path: "{{ was_home }}/bin/wsadmin.sh"
+      register: was_check
+      failed_when: not was_check.stat.exists
+      tags: [always]
+
+  roles:
+    - role: was-nodeagent
+      tags: [federation]
+
+  post_tasks:
+    - name: Verify federation record
+      ansible.builtin.stat:
+        path: "{{ was_home }}/profiles/AppSrv0{{ groups['was_nodes'].index(inventory_hostname) + 1 }}/.federated"
+      register: fed_check
+
+    - name: Assert node is federated
+      ansible.builtin.assert:
+        that: fed_check.stat.exists
+        success_msg: "{{ inventory_hostname }} federated to {{ cell_name }}"
+        fail_msg: "Federation failed for {{ inventory_hostname }}"
+
+# --- Play 3: Create WAS cluster on Dmgr ---
+- name: Create WAS ND Cluster
+  hosts: dmgr
+  become: true
+  gather_facts: true
+  tags: [cluster-create]
+
+  roles:
+    - role: was-cluster
+      tags: [cluster-create]
+
+  post_tasks:
+    - name: Verify cluster config
+      ansible.builtin.stat:
+        path: "{{ was_home }}/profiles/Dmgr01/config/cells/{{ cell_name }}/clusters/{{ cluster_name }}/cluster.xml"
+      register: cluster_check
+
+    - name: Assert cluster exists
+      ansible.builtin.assert:
+        that: cluster_check.stat.exists
+        success_msg: "Cluster {{ cluster_name }} created with {{ groups['was_nodes'] | length }} members"
+        fail_msg: "Cluster creation failed"
+
+    - name: Display cell topology summary
+      ansible.builtin.debug:
+        msg: |
+          ════════════════════════════════════════════════
+           WAS ND Cell Configuration Complete
+          ════════════════════════════════════════════════
+           Cell:    {{ cell_name }}
+           Dmgr:    nexus-dmgr.{{ domain }} ({{ dmgr_soap_port }})
+           Cluster: {{ cluster_name }}
+           Members:
+          {% for host in groups['was_nodes'] %}
+             - {{ host }}.{{ domain }} / AppServer{{ loop.index }}
+          {% endfor %}
+           IHS:     nexus-ihs.{{ domain }} (pending ihs-install.yml)
+          ════════════════════════════════════════════════

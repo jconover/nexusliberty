@@ -1,0 +1,13 @@
+---
+galaxy_info:
+  role_name: was-cluster
+  author: jconover
+  description: WAS ND cluster creation and member management
+  license: MIT
+  min_ansible_version: "2.12"
+  platforms:
+    - name: EL
+      versions:
+        - "9"
+
+dependencies: []

@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# {{ ansible_managed }}
+# Mock startServer.sh — simulates starting a WAS application server
+
+SERVER=${1:-{{ was_server_name }}}
+PROFILE_HOME="{{ was_profile_path }}"
+LOG_FILE="{{ was_log_dir }}/startServer.log"
+
+echo "ADMU0116I: Tool information is being logged in ${LOG_FILE}"
+echo "ADMU0128I: Starting tool with the {{ was_profile_name }} profile"
+echo "ADMU3000I: Server ${SERVER} open for e-business; process id is $$"
+echo "ADMU3000I: Server ${SERVER} start completed"
+
+echo "STARTED $(date -Iseconds)" > "${PROFILE_HOME}/.${SERVER}.state"

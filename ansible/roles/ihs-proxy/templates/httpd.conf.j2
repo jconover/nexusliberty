@@ -1,0 +1,45 @@
+# {{ ansible_managed }}
+# IBM HTTP Server Configuration — NexusLiberty WAS ND Environment
+
+ServerRoot "{{ ihs_home }}"
+Listen {{ ihs_http_port }}
+{% if ihs_tls_enabled %}
+Listen {{ ihs_https_port }}
+{% endif %}
+
+ServerName {{ ihs_server_name }}:{{ ihs_http_port }}
+ServerAdmin {{ ihs_admin_email }}
+
+DocumentRoot "{{ ihs_home }}/htdocs"
+
+# Load WebSphere Plugin module
+LoadModule was_ap24_module {{ plugin_home }}/bin/mod_was_ap24_http.so
+WebSpherePluginConfig {{ plugin_cfg_path }}
+
+# Logging
+ErrorLog "{{ ihs_home }}/logs/error_log"
+CustomLog "{{ ihs_home }}/logs/access_log" combined
+LogLevel warn
+
+{% if ihs_tls_enabled %}
+# SSL/TLS Configuration
+SSLEngine on
+SSLCertificateFile {{ ihs_tls_cert }}
+SSLCertificateKeyFile {{ ihs_tls_key }}
+{% else %}
+# SSL/TLS — disabled (enable via ihs_tls_enabled: true)
+# SSLEngine on
+# SSLCertificateFile {{ ihs_tls_cert }}
+# SSLCertificateKeyFile {{ ihs_tls_key }}
+{% endif %}
+
+<Directory "{{ ihs_home }}/htdocs">
+    Options Indexes FollowSymLinks
+    AllowOverride None
+    Require all granted
+</Directory>
+
+# Health check endpoint for load balancers
+<Location /ihs-health>
+    Require all granted
+</Location>

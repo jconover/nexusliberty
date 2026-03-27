@@ -1,0 +1,37 @@
+---
+# was-base/tasks/was-product.yml — Simulate WAS product installation
+# In production, IBM Installation Manager handles this.
+# Here we create the expected file structure and version markers.
+
+- name: Create WAS product directory for version file
+  ansible.builtin.file:
+    path: "{{ was_home }}/properties/version"
+    state: directory
+    owner: "{{ was_user }}"
+    group: "{{ was_group }}"
+    mode: "0755"
+
+- name: Create WAS version properties file
+  ansible.builtin.template:
+    src: WAS.product.j2
+    dest: "{{ was_home }}/properties/version/WAS.product"
+    owner: "{{ was_user }}"
+    group: "{{ was_group }}"
+    mode: "0644"
+  notify: display was version
+
+- name: Deploy mock versionInfo.sh
+  ansible.builtin.template:
+    src: versionInfo.sh.j2
+    dest: "{{ was_home }}/bin/versionInfo.sh"
+    owner: "{{ was_user }}"
+    group: "{{ was_group }}"
+    mode: "0755"
+
+- name: Deploy mock wsadmin.sh
+  ansible.builtin.template:
+    src: wsadmin.sh.j2
+    dest: "{{ was_home }}/bin/wsadmin.sh"
+    owner: "{{ was_user }}"
+    group: "{{ was_group }}"
+    mode: "0755"

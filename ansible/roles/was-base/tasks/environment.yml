@@ -1,0 +1,20 @@
+---
+# was-base/tasks/environment.yml — Configure system-wide WAS environment
+
+- name: Deploy WAS environment profile script
+  ansible.builtin.template:
+    src: was-env.sh.j2
+    dest: "{{ was_env_script }}"
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Configure /etc/hosts for WAS cell members
+  ansible.builtin.blockinfile:
+    path: /etc/hosts
+    block: |
+      192.168.56.10  nexus-dmgr.{{ domain }}  nexus-dmgr
+      192.168.56.11  nexus-was1.{{ domain }}   nexus-was1
+      192.168.56.12  nexus-was2.{{ domain }}   nexus-was2
+      192.168.56.13  nexus-ihs.{{ domain }}    nexus-ihs
+    marker: "# {mark} ANSIBLE MANAGED — WAS cell hosts"

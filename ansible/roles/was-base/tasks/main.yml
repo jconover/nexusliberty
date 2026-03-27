@@ -1,0 +1,32 @@
+---
+# was-base/tasks/main.yml — WAS ND base installation and configuration
+# Handles: prerequisites, OS user/group, directory structure, Java, environment,
+#           firewall baseline, and WAS product simulation.
+
+- name: Include prerequisite tasks
+  ansible.builtin.include_tasks: prereqs.yml
+  tags: [was-base, prereqs]
+
+- name: Include OS user and group setup
+  ansible.builtin.include_tasks: users.yml
+  tags: [was-base, users]
+
+- name: Include directory structure creation
+  ansible.builtin.include_tasks: directories.yml
+  tags: [was-base, directories]
+
+- name: Include Java configuration
+  ansible.builtin.include_tasks: java.yml
+  tags: [was-base, java]
+
+- name: Include WAS environment setup
+  ansible.builtin.include_tasks: environment.yml
+  tags: [was-base, environment]
+
+- name: Include WAS product simulation
+  ansible.builtin.include_tasks: was-product.yml
+  tags: [was-base, was-product]
+
+- name: Include firewall baseline
+  ansible.builtin.include_tasks: firewall.yml
+  tags: [was-base, firewall]

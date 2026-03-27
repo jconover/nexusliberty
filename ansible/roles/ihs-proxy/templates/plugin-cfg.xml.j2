@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!-- {{ ansible_managed }} -->
+<Config ASDisableNagle="false" AcceptAllContent="false"
+        IISDisableNagle="false" IgnoreDNSFailures="false"
+        RefreshInterval="{{ plugin_retry_interval }}" ResponseChunkSize="64"
+        VHostMatchingCompat="false">
+
+  <Log LogLevel="{{ plugin_log_level }}"
+       Name="{{ plugin_log_path }}"/>
+
+  <ServerCluster CloneSeparatorChange="false"
+                 LoadBalance="{{ plugin_lb_policy }}"
+                 Name="{{ cluster_name }}"
+                 PostSizeLimit="-1"
+                 RemoveSpecialHeaders="true"
+                 RetryInterval="{{ plugin_retry_interval }}">
+
+{% for host in groups['was_nodes'] %}
+{% set idx = loop.index %}
+{% set node_http = hostvars[host].get('was_http_port', 9080) %}
+{% set node_https = hostvars[host].get('was_https_port', 9443) %}
+    <Server ConnectTimeout="{{ plugin_connect_timeout }}"
+            ExtendedHandshake="false"
+            MaxConnections="-1"
+            Name="{{ host }}_AppServer{{ idx }}"
+            WaitForContinue="false">
+      <Transport Hostname="{{ host }}.{{ domain }}" Port="{{ node_http }}" Protocol="http"/>
+      <Transport Hostname="{{ host }}.{{ domain }}" Port="{{ node_https }}" Protocol="https"/>
+    </Server>
+
+{% endfor %}
+    <PrimaryServers>
+{% for host in groups['was_nodes'] %}
+      <Server Name="{{ host }}_AppServer{{ loop.index }}"/>
+{% endfor %}
+    </PrimaryServers>
+
+  </ServerCluster>
+
+  <VirtualHostGroup Name="default_host">
+    <VirtualHost Name="*:{{ ihs_http_port }}"/>
+    <VirtualHost Name="*:{{ ihs_https_port }}"/>
+    <VirtualHost Name="*:9080"/>
+    <VirtualHost Name="*:9443"/>
+  </VirtualHostGroup>
+
+  <UriGroup Name="default_host_URIs">
+    <Uri AffinityCookie="JSESSIONID" Name="{{ app_context_root }}/*"/>
+    <Uri AffinityCookie="JSESSIONID" Name="/{{ app_name }}/*"/>
+  </UriGroup>
+
+  <Route ServerCluster="{{ cluster_name }}"
+         UriGroup="default_host_URIs"
+         VirtualHostGroup="default_host"/>
+
+</Config>

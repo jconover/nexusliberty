@@ -1,0 +1,20 @@
+---
+# was-base/tasks/firewall.yml — Common firewall rules for all WAS nodes
+
+- name: Open common WAS ports
+  ansible.posix.firewalld:
+    port: "{{ item }}/tcp"
+    permanent: true
+    state: enabled
+    immediate: true
+  loop:
+    - "9080"    # WC_defaulthost (HTTP)
+    - "9443"    # WC_defaulthost_secure (HTTPS)
+    - "8880"    # SOAP connector (node)
+    - "2809"    # BOOTSTRAP_ADDRESS
+    - "9402"    # SAS_SSL_SERVERAUTH_LISTENER_ADDRESS
+    - "9403"    # CSIV2_SSL_MUTUALAUTH_LISTENER_ADDRESS
+    - "7276"    # DCS (HA Manager)
+    - "7286"    # DCS (HA Manager SSL)
+    - "5060"    # SIP
+    - "11003"   # ORB_LISTENER_ADDRESS

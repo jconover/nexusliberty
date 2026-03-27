@@ -1,0 +1,20 @@
+---
+# ihs-proxy/tasks/directories.yml — Create IHS directory structure
+
+- name: Create IHS directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ was_user }}"
+    group: "{{ was_group }}"
+    mode: "0755"
+  loop:
+    - "{{ ihs_home }}"
+    - "{{ ihs_home }}/bin"
+    - "{{ ihs_home }}/conf"
+    - "{{ ihs_home }}/logs"
+    - "{{ ihs_home }}/htdocs"
+    - "{{ plugin_home }}"
+    - "{{ plugin_home }}/bin"
+    - "{{ plugin_home }}/config/webserver1"
+    - "{{ plugin_home }}/logs/webserver1"

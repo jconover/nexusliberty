@@ -1,0 +1,22 @@
+---
+# ihs-proxy/tasks/main.yml — Install and configure IBM HTTP Server + WebSphere plugin
+
+- name: Include IHS directory setup
+  ansible.builtin.include_tasks: directories.yml
+  tags: [ihs, directories]
+
+- name: Include IHS configuration
+  ansible.builtin.include_tasks: configure.yml
+  tags: [ihs, configure]
+
+- name: Include WebSphere plugin configuration
+  ansible.builtin.include_tasks: plugin.yml
+  tags: [ihs, plugin]
+
+- name: Include firewall configuration
+  ansible.builtin.include_tasks: firewall.yml
+  tags: [ihs, firewall]
+
+- name: Include IHS startup
+  ansible.builtin.include_tasks: start.yml
+  tags: [ihs, start]

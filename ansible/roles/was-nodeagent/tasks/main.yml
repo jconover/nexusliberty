@@ -1,0 +1,101 @@
+---
+# was-nodeagent/tasks/main.yml — Create AppSrv profile, federate to Dmgr, start node agent
+
+- name: Set profile name based on inventory index
+  ansible.builtin.set_fact:
+    was_profile_name: "AppSrv0{{ groups['was_nodes'].index(inventory_hostname) + 1 }}"
+    was_node_name: "{{ inventory_hostname }}Node"
+    was_server_name: "AppServer{{ groups['was_nodes'].index(inventory_hostname) + 1 }}"
+
+- name: Set profile path
+  ansible.builtin.set_fact:
+    was_profile_path: "{{ was_home }}/profiles/{{ was_profile_name }}"
+
+- name: Create AppSrv profile directory structure
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ was_user }}"
+    group: "{{ was_group }}"
+    mode: "0755"
+  loop:
+    - "{{ was_profile_path }}"
+    - "{{ was_profile_path }}/bin"
+    - "{{ was_profile_path }}/config"
+    - "{{ was_profile_path }}/config/cells/{{ cell_name }}/nodes/{{ was_node_name }}"
+    - "{{ was_profile_path }}/config/cells/{{ cell_name }}/nodes/{{ was_node_name }}/servers/{{ was_server_name }}"
+    - "{{ was_profile_path }}/logs"
+    - "{{ was_profile_path }}/logs/{{ was_server_name }}"
+    - "{{ was_profile_path }}/logs/nodeagent"
+    - "{{ was_profile_path }}/properties"
+    - "{{ was_profile_path }}/installedApps"
+    - "{{ was_profile_path }}/installedApps/{{ cell_name }}"
+
+- name: Deploy server.xml for application server
+  ansible.builtin.template:
+    src: server.xml.j2
+    dest: "{{ was_profile_path }}/config/cells/{{ cell_name }}/nodes/{{ was_node_name }}/servers/{{ was_server_name }}/server.xml"
+    owner: "{{ was_user }}"
+    group: "{{ was_group }}"
+    mode: "0644"
+
+- name: Deploy serverindex.xml
+  ansible.builtin.template:
+    src: serverindex.xml.j2
+    dest: "{{ was_profile_path }}/config/cells/{{ cell_name }}/nodes/{{ was_node_name }}/serverindex.xml"
+    owner: "{{ was_user }}"
+    group: "{{ was_group }}"
+    mode: "0644"
+
+- name: Deploy node agent and server control scripts
+  ansible.builtin.template:
+    src: "{{ item.src }}"
+    dest: "{{ was_profile_path }}/bin/{{ item.dest }}"
+    owner: "{{ was_user }}"
+    group: "{{ was_group }}"
+    mode: "0755"
+  loop:
+    - { src: startNode.sh.j2,   dest: startNode.sh }
+    - { src: stopNode.sh.j2,    dest: stopNode.sh }
+    - { src: startServer.sh.j2, dest: startServer.sh }
+    - { src: stopServer.sh.j2,  dest: stopServer.sh }
+
+- name: Simulate federation to Deployment Manager
+  ansible.builtin.template:
+    src: federation-record.j2
+    dest: "{{ was_profile_path }}/.federated"
+    owner: "{{ was_user }}"
+    group: "{{ was_group }}"
+    mode: "0644"
+
+- name: Display federation status
+  ansible.builtin.debug:
+    msg: >-
+      ADMU0003I: Node {{ was_node_name }} has been successfully
+      federated into cell {{ cell_name }} managed by
+      {{ dmgr_host }}:{{ dmgr_soap_port }}
+
+- name: Open managed node firewall ports
+  ansible.posix.firewalld:
+    port: "{{ item }}/tcp"
+    permanent: true
+    state: enabled
+    immediate: true
+  loop:
+    - "{{ was_http_port }}"
+    - "{{ was_https_port }}"
+    - "{{ was_soap_port }}"
+    - "{{ was_node_agent_soap_port }}"
+    - "{{ was_bootstrap_port }}"
+
+- name: Start node agent
+  ansible.builtin.command:
+    cmd: "{{ was_profile_path }}/bin/startNode.sh"
+  become: true
+  become_user: "{{ was_user }}"
+  register: nodeagent_start
+  changed_when: "'completed' in nodeagent_start.stdout"
+
+- name: Display node agent start result
+  ansible.builtin.debug:
+    msg: "{{ nodeagent_start.stdout_lines }}"

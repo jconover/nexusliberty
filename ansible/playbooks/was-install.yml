@@ -1,0 +1,71 @@
+---
+# was-install.yml — WAS ND Base Installation Playbook
+#
+# Installs and configures the IBM WebSphere Application Server ND base
+# on all WAS cell members (Deployment Manager + managed nodes).
+#
+# Usage:
+#   ansible-playbook -i inventory/hosts.ini playbooks/was-install.yml
+#   ansible-playbook -i inventory/hosts.ini playbooks/was-install.yml --tags prereqs
+#   ansible-playbook -i inventory/hosts.ini playbooks/was-install.yml --check
+#
+# Prerequisites:
+#   - Vagrant VMs running (vagrant up from ../vagrant/)
+#   - SSH connectivity to all nodes
+
+- name: WAS ND Base Installation — All Cell Members
+  hosts: was
+  become: true
+  gather_facts: true
+
+  pre_tasks:
+    - name: Validate connectivity
+      ansible.builtin.ping:
+      tags: [always]
+
+    - name: Display target host info
+      ansible.builtin.debug:
+        msg: >-
+          Installing WAS {{ was_version }} {{ was_edition }} on
+          {{ inventory_hostname }} ({{ ansible_host }})
+      tags: [always]
+
+  roles:
+    - role: was-base
+      tags: [was-base]
+
+  post_tasks:
+    - name: Verify WAS directory structure
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      register: dir_check
+      loop:
+        - "{{ was_home }}/bin/wsadmin.sh"
+        - "{{ was_home }}/bin/versionInfo.sh"
+        - "{{ was_home }}/properties"
+      tags: [verify]
+
+    - name: Assert WAS installation is complete
+      ansible.builtin.assert:
+        that:
+          - item.stat.exists
+        fail_msg: "Missing: {{ item.item }}"
+        success_msg: "Verified: {{ item.item }}"
+      loop: "{{ dir_check.results }}"
+      loop_control:
+        label: "{{ item.item }}"
+      tags: [verify]
+
+    - name: Run versionInfo.sh to confirm installation
+      ansible.builtin.command:
+        cmd: "{{ was_home }}/bin/versionInfo.sh"
+      become: true
+      become_user: "{{ was_user }}"
+      register: version_check
+      changed_when: false
+      tags: [verify]
+
+    - name: Display WAS version
+      ansible.builtin.debug:
+        msg: "{{ version_check.stdout_lines }}"
+      tags: [verify]

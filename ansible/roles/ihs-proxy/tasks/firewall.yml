@@ -1,0 +1,23 @@
+---
+# ihs-proxy/tasks/firewall.yml — IHS firewall rules
+
+- name: Open IHS HTTP port
+  ansible.posix.firewalld:
+    service: http
+    permanent: true
+    state: enabled
+    immediate: true
+
+- name: Open IHS HTTPS port
+  ansible.posix.firewalld:
+    service: https
+    permanent: true
+    state: enabled
+    immediate: true
+
+- name: Open IHS admin port
+  ansible.posix.firewalld:
+    port: "{{ ihs_admin_port }}/tcp"
+    permanent: true
+    state: enabled
+    immediate: true

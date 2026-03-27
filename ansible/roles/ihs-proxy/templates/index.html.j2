@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>NexusLiberty — IBM HTTP Server</title>
+  <style>
+    body { font-family: 'Segoe UI', Arial, sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; }
+    h1 { color: #1a4480; }
+    .info { background: #f0f4f8; padding: 20px; border-radius: 8px; margin: 20px 0; }
+    .info dt { font-weight: bold; color: #1a4480; }
+    .info dd { margin-bottom: 10px; }
+    a { color: #2672de; }
+  </style>
+</head>
+<body>
+  <h1>NexusLiberty WAS ND Environment</h1>
+  <p>IBM HTTP Server is routing traffic to the WebSphere cluster.</p>
+
+  <div class="info">
+    <dl>
+      <dt>Cell</dt>
+      <dd>{{ cell_name }}</dd>
+      <dt>Cluster</dt>
+      <dd>{{ cluster_name }}</dd>
+      <dt>IHS Server</dt>
+      <dd>{{ ihs_server_name }}</dd>
+      <dt>Plugin Config</dt>
+      <dd>{{ plugin_cfg_path }}</dd>
+    </dl>
+  </div>
+
+  <h2>Application</h2>
+  <ul>
+    <li><a href="{{ app_context_root }}/">{{ app_name }}</a> (context root: {{ app_context_root }})</li>
+  </ul>
+
+  <h2>Cluster Members</h2>
+  <ul>
+{% for host in groups['was_nodes'] %}
+    <li>{{ host }}.{{ domain }} — AppServer{{ loop.index }}</li>
+{% endfor %}
+  </ul>
+
+  <footer>
+    <p><small>Managed by Ansible — {{ ansible_managed }}</small></p>
+  </footer>
+</body>
+</html>

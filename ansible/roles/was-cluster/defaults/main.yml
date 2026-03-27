@@ -1,0 +1,6 @@
+---
+# was-cluster role defaults
+
+cluster_name: nexusliberty_cluster
+cluster_weight: 2
+cluster_prefer_local: true

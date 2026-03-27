@@ -1,0 +1,13 @@
+---
+galaxy_info:
+  role_name: was-base
+  author: jconover
+  description: IBM WebSphere Application Server ND base installation and configuration
+  license: MIT
+  min_ansible_version: "2.12"
+  platforms:
+    - name: EL
+      versions:
+        - "9"
+
+dependencies: []

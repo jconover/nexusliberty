@@ -1,0 +1,13 @@
+---
+galaxy_info:
+  role_name: ihs-proxy
+  author: jconover
+  description: IBM HTTP Server installation and WebSphere plugin configuration
+  license: MIT
+  min_ansible_version: "2.12"
+  platforms:
+    - name: EL
+      versions:
+        - "9"
+
+dependencies: []

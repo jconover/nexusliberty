@@ -1,0 +1,28 @@
+---
+# was-base/tasks/users.yml — Create WAS OS user and group
+
+- name: Create WAS group
+  ansible.builtin.group:
+    name: "{{ was_group }}"
+    state: present
+
+- name: Create WAS admin user
+  ansible.builtin.user:
+    name: "{{ was_user }}"
+    group: "{{ was_group }}"
+    home: "/home/{{ was_user }}"
+    shell: /bin/bash
+    state: present
+
+- name: Set up wasadmin bash profile
+  ansible.builtin.blockinfile:
+    path: "/home/{{ was_user }}/.bashrc"
+    block: |
+      export JAVA_HOME={{ java_home }}
+      export WAS_HOME={{ was_home }}
+      export PATH=$WAS_HOME/bin:$JAVA_HOME/bin:$PATH
+    marker: "# {mark} ANSIBLE MANAGED — WAS environment"
+    create: true
+    owner: "{{ was_user }}"
+    group: "{{ was_group }}"
+    mode: "0644"

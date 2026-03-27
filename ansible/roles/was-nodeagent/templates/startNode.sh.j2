@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# {{ ansible_managed }}
+# Mock startNode.sh — simulates starting the WAS node agent
+
+PROFILE_HOME="{{ was_profile_path }}"
+LOG_FILE="{{ was_log_dir }}/startNode.log"
+
+echo "ADMU0116I: Tool information is being logged in ${LOG_FILE}"
+echo "ADMU0128I: Starting tool with the {{ was_profile_name }} profile"
+echo "ADMU3000I: Server nodeagent open for e-business; process id is $$"
+echo "ADMU3100I: Node agent start completed on {{ was_node_name }}"
+
+echo "STARTED $(date -Iseconds)" > "${PROFILE_HOME}/.nodeagent.state"

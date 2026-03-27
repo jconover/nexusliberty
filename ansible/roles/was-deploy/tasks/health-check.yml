@@ -1,0 +1,41 @@
+---
+# was-deploy/tasks/health-check.yml — Post-deployment health verification
+
+- name: Copy health check script to Dmgr
+  ansible.builtin.copy:
+    src: "{{ wsadmin_scripts_dir }}/health-check.py"
+    dest: "{{ dmgr_profile_path }}/scripts/health-check.py"
+    owner: "{{ was_user }}"
+    group: "{{ was_group }}"
+    mode: "0755"
+
+- name: Run post-deployment health check
+  ansible.builtin.command:
+    cmd: >-
+      {{ was_home }}/bin/wsadmin.sh
+      -lang jython
+      -f {{ dmgr_profile_path }}/scripts/health-check.py
+      -host {{ dmgr_host }}
+      -port {{ dmgr_soap_port }}
+      -user {{ was_admin_user }}
+      -password {{ was_admin_password }}
+  become: true
+  become_user: "{{ was_user }}"
+  environment:
+    CELL_NAME: "{{ cell_name }}"
+    CLUSTER_NAME: "{{ cluster_name }}"
+    APP_NAME: "{{ app_name }}"
+  register: health_result
+  changed_when: false
+  failed_when: health_result.rc != 0
+
+- name: Display health check results
+  ansible.builtin.debug:
+    msg: "{{ health_result.stdout_lines }}"
+
+- name: Assert health check passed
+  ansible.builtin.assert:
+    that:
+      - "'ALL COMPONENTS HEALTHY' in health_result.stdout"
+    success_msg: "Post-deployment health check PASSED"
+    fail_msg: "Post-deployment health check FAILED — review output above"

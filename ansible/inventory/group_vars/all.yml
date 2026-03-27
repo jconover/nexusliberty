@@ -1,0 +1,41 @@
+---
+# NexusLiberty — Global Ansible Variables
+# Shared across all WAS ND cell members
+
+# --- Connection ---
+ansible_user: vagrant
+ansible_ssh_private_key_file: "{{ lookup('env', 'VAGRANT_SSH_KEY') | default('~/.vagrant.d/insecure_private_key', true) }}"
+ansible_python_interpreter: /usr/bin/python3
+
+# --- IBM directory paths ---
+was_home: /opt/IBM/WebSphere/AppServer
+ihs_home: /opt/IBM/HTTPServer
+plugin_home: /opt/IBM/WebSphere/Plugins
+im_home: /opt/IBM/InstallationManager
+
+# --- WAS Cell topology ---
+cell_name: nexusliberty-cell
+dmgr_host: nexus-dmgr.nexuslab.local
+dmgr_soap_port: 8879
+dmgr_admin_port: 9060
+dmgr_admin_secure_port: 9043
+
+# --- WAS admin credentials (simulation only — vault in production) ---
+was_admin_user: wasadmin
+was_admin_password: wasadmin123
+
+# --- OS user/group for WAS ---
+was_user: wasadmin
+was_group: wasgrp
+
+# --- Java ---
+java_home: /usr/lib/jvm/java-11-openjdk
+
+# --- Application ---
+app_name: nexus-app
+app_war: nexus-app.war
+app_context_root: /app
+cluster_name: nexusliberty_cluster
+
+# --- Domain ---
+domain: nexuslab.local

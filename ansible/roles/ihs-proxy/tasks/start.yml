@@ -1,0 +1,26 @@
+---
+# ihs-proxy/tasks/start.yml — Start IBM HTTP Server
+
+- name: Start IBM HTTP Server
+  ansible.builtin.command:
+    cmd: "{{ ihs_home }}/bin/apachectl start"
+  become: true
+  become_user: "{{ was_user }}"
+  register: ihs_start
+  changed_when: "'Starting' in ihs_start.stdout"
+
+- name: Display IHS start result
+  ansible.builtin.debug:
+    msg: "{{ ihs_start.stdout_lines }}"
+
+- name: Verify IHS is running
+  ansible.builtin.command:
+    cmd: "{{ ihs_home }}/bin/apachectl status"
+  become: true
+  become_user: "{{ was_user }}"
+  register: ihs_status
+  changed_when: false
+
+- name: Display IHS status
+  ansible.builtin.debug:
+    msg: "{{ ihs_status.stdout_lines }}"

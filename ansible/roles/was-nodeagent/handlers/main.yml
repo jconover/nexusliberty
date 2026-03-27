@@ -1,0 +1,18 @@
+---
+# was-nodeagent/handlers/main.yml
+
+- name: restart nodeagent
+  ansible.builtin.shell: |
+    {{ was_profile_path }}/bin/stopNode.sh
+    sleep 2
+    {{ was_profile_path }}/bin/startNode.sh
+  become: true
+  become_user: "{{ was_user }}"
+
+- name: restart appserver
+  ansible.builtin.shell: |
+    {{ was_profile_path }}/bin/stopServer.sh {{ was_server_name }}
+    sleep 2
+    {{ was_profile_path }}/bin/startServer.sh {{ was_server_name }}
+  become: true
+  become_user: "{{ was_user }}"

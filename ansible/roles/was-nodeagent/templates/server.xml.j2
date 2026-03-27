@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- {{ ansible_managed }} -->
+<server name="{{ was_server_name }}"
+        serverType="APPLICATION_SERVER"
+        xmlns:xmi="http://www.omg.org/XMI">
+  <stateManagement initialState="START"/>
+  <processDefinition>
+    <jvmEntries initialHeapSize="{{ was_jvm_initial_heap }}"
+                maximumHeapSize="{{ was_jvm_max_heap }}"
+                genericJvmArguments="{{ was_generic_jvm_args }}"/>
+  </processDefinition>
+</server>

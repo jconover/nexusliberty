@@ -1,0 +1,86 @@
+---
+# ihs-install.yml — IBM HTTP Server + WebSphere Plugin Installation
+#
+# Installs and configures IHS as the front-end load balancer for the
+# WAS ND cluster. Deploys the WebSphere plugin (plugin-cfg.xml) that
+# routes requests to cluster members via round-robin.
+#
+# Usage:
+#   ansible-playbook -i inventory/hosts.ini playbooks/ihs-install.yml
+#   ansible-playbook -i inventory/hosts.ini playbooks/ihs-install.yml --tags plugin
+#   ansible-playbook -i inventory/hosts.ini playbooks/ihs-install.yml --tags configure
+#
+# Prerequisites:
+#   - was-install.yml has been run (creates base dirs and wasadmin user)
+#   - was-cluster.yml has been run (cluster must exist for plugin routing)
+
+- name: Install IBM HTTP Server + WebSphere Plugin
+  hosts: ihs
+  become: true
+  gather_facts: true
+
+  pre_tasks:
+    - name: Validate connectivity
+      ansible.builtin.ping:
+      tags: [always]
+
+    - name: Verify wasadmin user exists
+      ansible.builtin.user:
+        name: "{{ was_user }}"
+        state: present
+      check_mode: true
+      register: user_check
+      failed_when: user_check.changed
+      tags: [always]
+
+    - name: Display IHS install info
+      ansible.builtin.debug:
+        msg: |
+          Installing IBM HTTP Server
+          Host: {{ ihs_server_name }}
+          HTTP: :{{ ihs_http_port }}  HTTPS: :{{ ihs_https_port }}
+          Plugin LB: {{ plugin_lb_policy }} -> {{ cluster_name }}
+      tags: [always]
+
+  roles:
+    - role: ihs-proxy
+      tags: [ihs]
+
+  post_tasks:
+    - name: Verify IHS configuration files
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      register: ihs_files
+      loop:
+        - "{{ ihs_home }}/conf/httpd.conf"
+        - "{{ ihs_home }}/bin/apachectl"
+        - "{{ plugin_cfg_path }}"
+      tags: [verify]
+
+    - name: Assert IHS installation complete
+      ansible.builtin.assert:
+        that: item.stat.exists
+        success_msg: "Verified: {{ item.item }}"
+        fail_msg: "Missing: {{ item.item }}"
+      loop: "{{ ihs_files.results }}"
+      loop_control:
+        label: "{{ item.item }}"
+      tags: [verify]
+
+    - name: Display IHS topology summary
+      ansible.builtin.debug:
+        msg: |
+          ════════════════════════════════════════════════
+           IBM HTTP Server Installation Complete
+          ════════════════════════════════════════════════
+           Server:  {{ ihs_server_name }}
+           HTTP:    http://{{ ihs_server_name }}:{{ ihs_http_port }}/
+           App URL: http://{{ ihs_server_name }}{{ app_context_root }}/
+           Plugin:  {{ plugin_lb_policy }} load balancing
+           Cluster: {{ cluster_name }}
+           Members:
+          {% for host in groups['was_nodes'] %}
+             - {{ host }}.{{ domain }}:{{ hostvars[host].get('was_http_port', 9080) }}
+          {% endfor %}
+          ════════════════════════════════════════════════
+      tags: [verify]

@@ -1,0 +1,8 @@
+---
+# was-deploy/handlers/main.yml
+
+- name: restart cluster
+  ansible.builtin.debug:
+    msg: >-
+      ADMU0520I: Ripple-starting cluster {{ cluster_name }} —
+      restarting members one at a time to maintain availability

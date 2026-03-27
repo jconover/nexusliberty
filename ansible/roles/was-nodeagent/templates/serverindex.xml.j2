@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- {{ ansible_managed }} -->
+<serverindex hostName="{{ inventory_hostname }}.{{ domain }}">
+  <serverEntries serverName="{{ was_server_name }}" serverType="APPLICATION_SERVER">
+    <specialEndpoints endPointName="WC_defaulthost">
+      <endPoint host="*" port="{{ was_http_port }}"/>
+    </specialEndpoints>
+    <specialEndpoints endPointName="WC_defaulthost_secure">
+      <endPoint host="*" port="{{ was_https_port }}"/>
+    </specialEndpoints>
+    <specialEndpoints endPointName="SOAP_CONNECTOR_ADDRESS">
+      <endPoint host="{{ inventory_hostname }}.{{ domain }}" port="{{ was_soap_port }}"/>
+    </specialEndpoints>
+    <specialEndpoints endPointName="BOOTSTRAP_ADDRESS">
+      <endPoint host="{{ inventory_hostname }}.{{ domain }}" port="{{ was_bootstrap_port }}"/>
+    </specialEndpoints>
+  </serverEntries>
+  <serverEntries serverName="nodeagent" serverType="NODE_AGENT">
+    <specialEndpoints endPointName="SOAP_CONNECTOR_ADDRESS">
+      <endPoint host="{{ inventory_hostname }}.{{ domain }}" port="{{ was_node_agent_soap_port }}"/>
+    </specialEndpoints>
+  </serverEntries>
+</serverindex>
