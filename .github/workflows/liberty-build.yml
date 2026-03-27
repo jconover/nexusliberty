@@ -1,0 +1,47 @@
+name: Build and Push Liberty Image
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'docker/liberty-app/**'
+      - 'app/**'
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/jconover/nexusliberty-app
+          tags: |
+            type=sha
+            type=ref,event=branch
+            type=raw,value=latest
+
+      - name: Build and push Liberty image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./docker/liberty-app/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}

@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  NexusLiberty — Open Liberty Server Configuration
+  Runtime: Open Liberty (Jakarta EE 10 / MicroProfile 6.1)
+  App:     nexus-app.war @ /app
+  Ports:   HTTP 9080 / HTTPS 9443
+-->
+<server description="NexusLiberty App Server">
+
+    <!-- ================================================================
+         FEATURES
+         webProfile-10.0  — Jakarta EE 10 Web Profile (Servlet, JAX-RS,
+                            CDI, JSON-B, Bean Validation, JPA, JNDI, etc.)
+         microProfile-6.1 — MicroProfile 6.1 (mpHealth, mpMetrics,
+                            mpConfig, mpOpenAPI, mpJWT, mpTelemetry, etc.)
+    ================================================================ -->
+    <featureManager>
+        <feature>webProfile-10.0</feature>
+        <feature>microProfile-6.1</feature>
+    </featureManager>
+
+    <!-- ================================================================
+         HTTP ENDPOINT
+         Listens on all interfaces; HTTP redirects to HTTPS for app traffic.
+         OKD Routes and readiness/liveness probes use HTTPS (9443).
+    ================================================================ -->
+    <httpEndpoint id="defaultHttpEndpoint"
+                  host="*"
+                  httpPort="9080"
+                  httpsPort="9443"/>
+
+    <!-- ================================================================
+         TLS / KEYSTORE
+         Password sourced from env var injected by OpenShift Secret.
+         Falls back to 'liberty' for local development only — do not use
+         the default in production environments.
+    ================================================================ -->
+    <keyStore id="defaultKeyStore"
+              password="${env.KEYSTORE_PASSWORD:liberty}"/>
+
+    <!-- ================================================================
+         HEALTH (MicroProfile Health 3.1+)
+         Exposes:
+           /health        — combined liveness + readiness
+           /health/live   — liveness probe endpoint
+           /health/ready  — readiness probe endpoint
+         No authentication required so OKD probes can reach endpoints
+         without credentials.
+    ================================================================ -->
+    <mpHealth/>
+
+    <!-- ================================================================
+         METRICS (MicroProfile Metrics 5.x)
+         Exposes /metrics for Prometheus scraping.
+         Authentication disabled — rely on network policy in OKD to
+         restrict scrape access rather than HTTP basic auth.
+    ================================================================ -->
+    <mpMetrics authentication="false"/>
+
+    <!-- ================================================================
+         APPLICATION
+         WAR is copied into the Liberty image at build time.
+         contextRoot matches the OKD Route path prefix.
+    ================================================================ -->
+    <webApplication id="nexus-app"
+                    location="nexus-app.war"
+                    contextRoot="/app"/>
+
+    <!-- ================================================================
+         LOGGING
+         JSON format enables structured log ingestion by OKD's built-in
+         log aggregation (Loki / Elasticsearch) without additional parsing.
+         Level: INFO — change to FINE/FINER for troubleshooting.
+    ================================================================ -->
+    <logging consoleFormat="json"
+             consoleLogLevel="INFO"/>
+
+</server>
