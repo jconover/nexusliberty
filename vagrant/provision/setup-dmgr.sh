@@ -11,7 +11,7 @@ WAS_PROFILE="${WAS_HOME}/profiles/Dmgr01"
 # --- Directory structure matching a real WAS ND Dmgr profile ---
 su - wasadmin -c "
 mkdir -p ${WAS_PROFILE}/{bin,config,logs,properties,installedApps}
-mkdir -p ${WAS_PROFILE}/config/cells/${CELL_NAME}/{nodes,applications,clusters}
+mkdir -p ${WAS_PROFILE}/config/cells/${CELL_NAME}/{nodes/${NODE_NAME},applications,clusters}
 mkdir -p ${WAS_PROFILE}/logs/dmgr
 mkdir -p ${WAS_HOME}/bin
 mkdir -p ${WAS_HOME}/java/bin
