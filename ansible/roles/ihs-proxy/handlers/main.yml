@@ -1,0 +1,16 @@
+---
+# ihs-proxy/handlers/main.yml
+
+- name: restart ihs
+  ansible.builtin.shell: |
+    {{ ihs_home }}/bin/apachectl stop
+    sleep 1
+    {{ ihs_home }}/bin/apachectl start
+  become: true
+  become_user: "{{ was_user }}"
+
+- name: reload ihs
+  ansible.builtin.command:
+    cmd: "{{ ihs_home }}/bin/apachectl restart"
+  become: true
+  become_user: "{{ was_user }}"

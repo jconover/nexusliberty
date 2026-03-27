@@ -1,0 +1,40 @@
+---
+# was-base role defaults
+# These can be overridden in group_vars or host_vars
+
+# IBM directory structure
+was_home: /opt/IBM/WebSphere/AppServer
+im_home: /opt/IBM/InstallationManager
+was_log_dir: /var/log/was
+
+# OS user/group
+was_user: wasadmin
+was_group: wasgrp
+
+# Java
+java_home: /usr/lib/jvm/java-11-openjdk
+java_packages:
+  - java-11-openjdk
+  - java-11-openjdk-devel
+
+# Prerequisites
+was_prereq_packages:
+  - unzip
+  - tar
+  - wget
+  - curl
+  - net-tools
+  - bind-utils
+  - firewalld
+  - libstdc++
+  - compat-libstdc++-33
+  - gtk2
+  - libXtst
+  - nss-softokn-freebl
+
+# WAS environment script
+was_env_script: /etc/profile.d/was-env.sh
+
+# Simulated WAS version (for config file generation)
+was_version: "9.0.5.15"
+was_edition: "ND"

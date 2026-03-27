@@ -1,0 +1,83 @@
+---
+# was-dmgr/tasks/main.yml — Create and configure the Deployment Manager profile
+
+- name: Create Dmgr profile directory structure
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ was_user }}"
+    group: "{{ was_group }}"
+    mode: "0755"
+  loop:
+    - "{{ was_profile_path }}"
+    - "{{ was_profile_path }}/bin"
+    - "{{ was_profile_path }}/config"
+    - "{{ was_profile_path }}/config/cells/{{ cell_name }}"
+    - "{{ was_profile_path }}/config/cells/{{ cell_name }}/nodes/{{ was_node_name }}"
+    - "{{ was_profile_path }}/config/cells/{{ cell_name }}/clusters"
+    - "{{ was_profile_path }}/config/cells/{{ cell_name }}/applications"
+    - "{{ was_profile_path }}/logs"
+    - "{{ was_profile_path }}/logs/dmgr"
+    - "{{ was_profile_path }}/properties"
+    - "{{ was_profile_path }}/installedApps"
+    - "{{ was_profile_path }}/installedApps/{{ cell_name }}"
+
+- name: Deploy cell.xml
+  ansible.builtin.template:
+    src: cell.xml.j2
+    dest: "{{ was_profile_path }}/config/cells/{{ cell_name }}/cell.xml"
+    owner: "{{ was_user }}"
+    group: "{{ was_group }}"
+    mode: "0644"
+
+- name: Deploy Dmgr serverindex.xml
+  ansible.builtin.template:
+    src: dmgr-serverindex.xml.j2
+    dest: "{{ was_profile_path }}/config/cells/{{ cell_name }}/nodes/{{ was_node_name }}/serverindex.xml"
+    owner: "{{ was_user }}"
+    group: "{{ was_group }}"
+    mode: "0644"
+
+- name: Deploy Dmgr security.xml
+  ansible.builtin.template:
+    src: security.xml.j2
+    dest: "{{ was_profile_path }}/config/cells/{{ cell_name }}/security.xml"
+    owner: "{{ was_user }}"
+    group: "{{ was_group }}"
+    mode: "0640"
+
+- name: Deploy Dmgr control scripts
+  ansible.builtin.template:
+    src: "{{ item.src }}"
+    dest: "{{ was_profile_path }}/bin/{{ item.dest }}"
+    owner: "{{ was_user }}"
+    group: "{{ was_group }}"
+    mode: "0755"
+  loop:
+    - { src: startManager.sh.j2, dest: startManager.sh }
+    - { src: stopManager.sh.j2,  dest: stopManager.sh }
+
+- name: Open Dmgr-specific firewall ports
+  ansible.posix.firewalld:
+    port: "{{ item }}/tcp"
+    permanent: true
+    state: enabled
+    immediate: true
+  loop:
+    - "{{ dmgr_admin_port }}"
+    - "{{ dmgr_admin_secure_port }}"
+    - "{{ dmgr_soap_port }}"
+    - "{{ dmgr_bootstrap_port }}"
+    - "{{ dmgr_dcs_unicast_port }}"
+
+- name: Start Deployment Manager
+  ansible.builtin.command:
+    cmd: "{{ was_profile_path }}/bin/startManager.sh"
+  become: true
+  become_user: "{{ was_user }}"
+  register: dmgr_start
+  changed_when: "'completed' in dmgr_start.stdout"
+
+- name: Display Dmgr start result
+  ansible.builtin.debug:
+    msg: "{{ dmgr_start.stdout_lines }}"

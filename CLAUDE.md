@@ -299,17 +299,17 @@ nexusliberty/
 ### Phase 1 — OKD Cluster Up ✅
 - [x] Install OKD 4.x via Assisted Installer on bare metal homelab
 - [x] Validate all cluster operators healthy
-- [ ] Install WebSphere Liberty Operator
-- [ ] Deploy sample Liberty app via Operator (prove end-to-end)
-- [ ] Document cluster install process in docs/
+- [x] Install WebSphere Liberty Operator
+- [x] Deploy sample Liberty app via Operator (prove end-to-end)
+- [x] Document cluster install process in docs/
 
-### Phase 2 — Liberty Containerization
-- [ ] Write Dockerfile for Liberty + sample Java app
-- [ ] Configure server.xml with features, datasources, endpoints
-- [ ] Push image to GitHub Container Registry (GHCR)
-- [ ] Deploy via WebSphereLibertyApplication CR on OKD
-- [ ] Expose via OpenShift Route
-- [ ] Validate app accessible via Route URL
+### Phase 2 — Liberty Containerization ✅
+- [x] Write Dockerfile for Liberty + sample Java app
+- [x] Configure server.xml with features, datasources, endpoints
+- [x] Push image to GitHub Container Registry (GHCR)
+- [x] Deploy via WebSphereLibertyApplication CR on OKD
+- [x] Expose via OpenShift Route
+- [x] Validate app accessible via Route URL
 
 ### Phase 3 — Ansible WAS Automation
 - [ ] Vagrant environment simulating WAS ND nodes
@@ -320,7 +320,7 @@ nexusliberty/
 - [ ] wsadmin Jython scripts for common admin tasks
 
 ### Phase 4 — CI/CD Pipeline
-- [ ] GitHub Actions: build Liberty image on push to main
+- [x] GitHub Actions: build Liberty image on push to main
 - [ ] GitHub Actions: deploy to OKD on successful build
 - [ ] GitHub Actions: Ansible lint on playbook changes
 - [ ] Add health check step post-deploy

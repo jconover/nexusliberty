@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- {{ ansible_managed }} -->
+<!-- Cluster-scoped resource definitions -->
+<resources xmlns:xmi="http://www.omg.org/XMI">
+
+  <!-- Cluster-scoped JDBC provider (placeholder for app datasource) -->
+  <jdbcProviders name="Derby JDBC Provider (cluster)"
+                 implementationClassName="org.apache.derby.jdbc.EmbeddedConnectionPoolDataSource"
+                 scope="cluster={{ cluster_name }}">
+    <dataSources name="{{ app_name }}-ds"
+                 jndiName="jdbc/{{ app_name }}"
+                 authMechanismPreference="BASIC_PASSWORD"
+                 statementCacheSize="60">
+      <propertySet>
+        <resourceProperties name="databaseName" value="${APP_DB_NAME}" type="java.lang.String"/>
+        <resourceProperties name="createDatabase" value="create" type="java.lang.String"/>
+      </propertySet>
+      <connectionPool minConnections="5"
+                      maxConnections="50"
+                      connectionTimeout="180"
+                      reapTime="180"
+                      unusedTimeout="1800"
+                      agedTimeout="0"/>
+    </dataSources>
+  </jdbcProviders>
+
+</resources>

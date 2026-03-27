@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+# {{ ansible_managed }}
+# Mock apachectl — simulates IBM HTTP Server control
+
+ACTION=${1:-status}
+LOG_DIR="{{ ihs_home }}/logs"
+
+case $ACTION in
+  start)
+    echo "IHS: Starting IBM HTTP Server on {{ ihs_server_name }}"
+    echo "IHS: Listening on port {{ ihs_http_port }} (HTTP)"
+{% if ihs_tls_enabled %}
+    echo "IHS: Listening on port {{ ihs_https_port }} (HTTPS)"
+{% endif %}
+    echo "IHS: WebSphere plugin loaded from {{ plugin_cfg_path }}"
+    echo "IHS: Server started (pid $$)"
+    echo "STARTED $(date -Iseconds)" > "{{ ihs_home }}/.ihs.state"
+    ;;
+  stop)
+    echo "IHS: Stopping IBM HTTP Server"
+    echo "IHS: Server stopped"
+    echo "STOPPED $(date -Iseconds)" > "{{ ihs_home }}/.ihs.state"
+    ;;
+  restart)
+    $0 stop
+    sleep 1
+    $0 start
+    ;;
+  status)
+    echo "IHS: IBM HTTP Server is running (pid 1234)"
+    echo "IHS: Uptime: $(uptime -p 2>/dev/null || echo 'unknown')"
+    echo "IHS: Config: {{ ihs_home }}/conf/httpd.conf"
+    echo "IHS: Plugin: {{ plugin_cfg_path }}"
+    ;;
+  configtest)
+    echo "Syntax OK"
+    ;;
+  *)
+    echo "Usage: apachectl {start|stop|restart|status|configtest}"
+    exit 1
+    ;;
+esac

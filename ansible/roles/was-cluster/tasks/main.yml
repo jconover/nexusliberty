@@ -1,0 +1,51 @@
+---
+# was-cluster/tasks/main.yml — Create WAS ND cluster and register members
+# Runs on the Dmgr node only — manages cluster config centrally
+
+- name: Set Dmgr profile path
+  ansible.builtin.set_fact:
+    dmgr_profile_path: "{{ was_home }}/profiles/Dmgr01"
+
+- name: Create cluster config directory
+  ansible.builtin.file:
+    path: "{{ dmgr_profile_path }}/config/cells/{{ cell_name }}/clusters/{{ cluster_name }}"
+    state: directory
+    owner: "{{ was_user }}"
+    group: "{{ was_group }}"
+    mode: "0755"
+
+- name: Deploy cluster.xml
+  ansible.builtin.template:
+    src: cluster.xml.j2
+    dest: "{{ dmgr_profile_path }}/config/cells/{{ cell_name }}/clusters/{{ cluster_name }}/cluster.xml"
+    owner: "{{ was_user }}"
+    group: "{{ was_group }}"
+    mode: "0644"
+  notify: sync cluster config
+
+- name: Deploy cluster resources.xml
+  ansible.builtin.template:
+    src: resources.xml.j2
+    dest: "{{ dmgr_profile_path }}/config/cells/{{ cell_name }}/clusters/{{ cluster_name }}/resources.xml"
+    owner: "{{ was_user }}"
+    group: "{{ was_group }}"
+    mode: "0644"
+
+- name: Create cluster member state tracking
+  ansible.builtin.template:
+    src: cluster-state.j2
+    dest: "{{ dmgr_profile_path }}/.cluster-{{ cluster_name }}.state"
+    owner: "{{ was_user }}"
+    group: "{{ was_group }}"
+    mode: "0644"
+
+- name: Display cluster creation summary
+  ansible.builtin.debug:
+    msg: |
+      ADMU0520I: Cluster {{ cluster_name }} created successfully
+      Members:
+      {% for host in groups['was_nodes'] %}
+        - {{ host }}Node / AppServer{{ loop.index }} (weight: {{ cluster_weight }})
+      {% endfor %}
+      Cell: {{ cell_name }}
+      Dmgr: {{ dmgr_host }}

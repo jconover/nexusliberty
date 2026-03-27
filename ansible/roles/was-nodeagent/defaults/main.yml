@@ -1,0 +1,13 @@
+---
+# was-nodeagent role defaults
+
+was_node_agent_soap_port: 8878
+was_soap_port: 8880
+was_http_port: 9080
+was_https_port: 9443
+was_bootstrap_port: 9810
+
+# JVM tuning
+was_jvm_initial_heap: 512
+was_jvm_max_heap: 1024
+was_generic_jvm_args: "-Xshareclasses:none"

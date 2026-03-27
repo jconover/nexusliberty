@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# {{ ansible_managed }}
+# System-wide WAS environment variables
+
+export JAVA_HOME={{ java_home }}
+export WAS_HOME={{ was_home }}
+export IHS_HOME=/opt/IBM/HTTPServer
+export PLUGIN_HOME=/opt/IBM/WebSphere/Plugins
+export PATH=$WAS_HOME/bin:$JAVA_HOME/bin:$PATH

@@ -1,0 +1,92 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+#
+# NexusLiberty — WAS ND Cell Simulation
+# Simulates an IBM WebSphere Application Server Network Deployment environment
+# for Ansible automation development and portfolio demonstration.
+#
+# Topology:
+#   nexus-dmgr  — Deployment Manager (cell admin, SOAP :8879, console :9060)
+#   nexus-was1  — Managed node with AppServer1 (:9080/:9443)
+#   nexus-was2  — Managed node with AppServer2 (:9080/:9443)
+#   nexus-ihs   — IBM HTTP Server + WebSphere plugin (:80/:443)
+
+VAGRANT_BOX = "generic/centos9s"
+DOMAIN      = "nexuslab.local"
+
+# Private network subnet — Vagrant-only, no conflict with homelab
+SUBNET = "192.168.56"
+
+NODES = [
+  { name: "nexus-dmgr", ip: "#{SUBNET}.10", memory: 2048, cpus: 2,
+    ports: [
+      { guest: 9060, host: 9060 },   # WAS Admin Console
+      { guest: 8879, host: 8879 },   # SOAP connector
+      { guest: 9043, host: 9043 },   # Admin Console (HTTPS)
+    ]
+  },
+  { name: "nexus-was1", ip: "#{SUBNET}.11", memory: 1536, cpus: 2,
+    ports: [
+      { guest: 9080, host: 19080 },  # HTTP transport
+      { guest: 9443, host: 19443 },  # HTTPS transport
+    ]
+  },
+  { name: "nexus-was2", ip: "#{SUBNET}.12", memory: 1536, cpus: 2,
+    ports: [
+      { guest: 9080, host: 29080 },  # HTTP transport
+      { guest: 9443, host: 29443 },  # HTTPS transport
+    ]
+  },
+  { name: "nexus-ihs", ip: "#{SUBNET}.13", memory: 1024, cpus: 1,
+    ports: [
+      { guest: 80,  host: 8080 },    # IHS HTTP
+      { guest: 443, host: 8443 },    # IHS HTTPS
+    ]
+  },
+]
+
+Vagrant.configure("2") do |config|
+  config.vm.box = VAGRANT_BOX
+
+  # Shared Ansible requirements — install Python for Ansible compatibility
+  config.vm.provision "shell", path: "provision/bootstrap.sh"
+
+  NODES.each do |node|
+    config.vm.define node[:name] do |vm_config|
+      vm_config.vm.hostname = "#{node[:name]}.#{DOMAIN}"
+      vm_config.vm.network "private_network", ip: node[:ip]
+
+      # Port forwards for host access
+      node[:ports].each do |port|
+        vm_config.vm.network "forwarded_port",
+          guest: port[:guest],
+          host:  port[:host],
+          auto_correct: true
+      end
+
+      vm_config.vm.provider "virtualbox" do |vb|
+        vb.name   = node[:name]
+        vb.memory = node[:memory]
+        vb.cpus   = node[:cpus]
+        vb.linked_clone = true
+      end
+
+      vm_config.vm.provider "libvirt" do |lv|
+        lv.memory = node[:memory]
+        lv.cpus   = node[:cpus]
+      end
+
+      # Role-specific provisioning
+      vm_config.vm.provision "shell",
+        path: "provision/setup-#{node[:name].gsub('nexus-', '')}.sh",
+        env: {
+          "WAS_HOME"    => "/opt/IBM/WebSphere/AppServer",
+          "IHS_HOME"    => "/opt/IBM/HTTPServer",
+          "PLUGIN_HOME" => "/opt/IBM/WebSphere/Plugins",
+          "CELL_NAME"   => "nexusliberty-cell",
+          "NODE_NAME"   => "#{node[:name]}Node",
+          "DOMAIN"      => DOMAIN,
+        }
+    end
+  end
+end

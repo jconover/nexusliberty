@@ -1,0 +1,10 @@
+# {{ ansible_managed }}
+# Cluster state record — used for idempotency checks
+
+cluster_name={{ cluster_name }}
+cell_name={{ cell_name }}
+created_at={{ ansible_date_time.iso8601 }}
+member_count={{ groups['was_nodes'] | length }}
+{% for host in groups['was_nodes'] %}
+member_{{ loop.index }}={{ host }}Node/AppServer{{ loop.index }}
+{% endfor %}

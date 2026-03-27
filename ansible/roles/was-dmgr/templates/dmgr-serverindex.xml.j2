@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- {{ ansible_managed }} -->
+<serverindex hostName="nexus-dmgr.{{ domain }}">
+  <serverEntries serverName="dmgr" serverType="DEPLOYMENT_MANAGER">
+    <specialEndpoints endPointName="SOAP_CONNECTOR_ADDRESS">
+      <endPoint host="nexus-dmgr.{{ domain }}" port="{{ dmgr_soap_port }}"/>
+    </specialEndpoints>
+    <specialEndpoints endPointName="WC_adminhost">
+      <endPoint host="*" port="{{ dmgr_admin_port }}"/>
+    </specialEndpoints>
+    <specialEndpoints endPointName="WC_adminhost_secure">
+      <endPoint host="*" port="{{ dmgr_admin_secure_port }}"/>
+    </specialEndpoints>
+    <specialEndpoints endPointName="BOOTSTRAP_ADDRESS">
+      <endPoint host="nexus-dmgr.{{ domain }}" port="{{ dmgr_bootstrap_port }}"/>
+    </specialEndpoints>
+    <specialEndpoints endPointName="DCS_UNICAST_ADDRESS">
+      <endPoint host="nexus-dmgr.{{ domain }}" port="{{ dmgr_dcs_unicast_port }}"/>
+    </specialEndpoints>
+  </serverEntries>
+</serverindex>

@@ -1,0 +1,20 @@
+---
+# ihs-proxy/tasks/plugin.yml — Deploy WebSphere plugin configuration
+
+- name: Deploy plugin-cfg.xml
+  ansible.builtin.template:
+    src: plugin-cfg.xml.j2
+    dest: "{{ plugin_cfg_path }}"
+    owner: "{{ was_user }}"
+    group: "{{ was_group }}"
+    mode: "0644"
+    backup: true
+  notify: restart ihs
+
+- name: Deploy mock plugin module
+  ansible.builtin.copy:
+    content: "# Simulated WebSphere plugin module — mod_was_ap24_http.so"
+    dest: "{{ plugin_home }}/bin/mod_was_ap24_http.so"
+    owner: "{{ was_user }}"
+    group: "{{ was_group }}"
+    mode: "0755"

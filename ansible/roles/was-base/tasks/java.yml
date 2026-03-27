@@ -1,0 +1,17 @@
+---
+# was-base/tasks/java.yml — Install and configure Java for WAS
+
+- name: Install Java packages
+  ansible.builtin.dnf:
+    name: "{{ java_packages }}"
+    state: present
+
+- name: Verify Java installation
+  ansible.builtin.command:
+    cmd: "{{ java_home }}/bin/java -version"
+  register: java_version
+  changed_when: false
+
+- name: Display Java version
+  ansible.builtin.debug:
+    msg: "{{ java_version.stderr_lines | default(java_version.stdout_lines) }}"

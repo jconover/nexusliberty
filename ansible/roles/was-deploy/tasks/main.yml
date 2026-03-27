@@ -1,0 +1,103 @@
+---
+# was-deploy/tasks/main.yml — Deploy application to WAS ND cluster via wsadmin
+
+- name: Set Dmgr profile path
+  ansible.builtin.set_fact:
+    dmgr_profile_path: "{{ was_home }}/profiles/Dmgr01"
+
+- name: Ensure app staging directory exists
+  ansible.builtin.file:
+    path: "{{ app_source_dir }}"
+    state: directory
+    owner: "{{ was_user }}"
+    group: "{{ was_group }}"
+    mode: "0755"
+
+- name: Check if application WAR exists locally
+  ansible.builtin.stat:
+    path: "{{ playbook_dir }}/../../app/target/{{ app_war }}"
+  delegate_to: localhost
+  become: false
+  register: local_war_check
+
+- name: Build application WAR if not present
+  ansible.builtin.debug:
+    msg: >-
+      WAR file not found at app/target/{{ app_war }}.
+      In production, run 'mvn package' in the app/ directory first.
+      Proceeding with simulated deployment.
+  when: not local_war_check.stat.exists
+
+- name: Copy WAR to staging directory (when WAR exists)
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../../app/target/{{ app_war }}"
+    dest: "{{ app_source_dir }}/{{ app_war }}"
+    owner: "{{ was_user }}"
+    group: "{{ was_group }}"
+    mode: "0644"
+  when: local_war_check.stat.exists
+
+- name: Create simulated WAR placeholder (when WAR not built)
+  ansible.builtin.copy:
+    content: "PLACEHOLDER — simulated {{ app_war }} for deployment automation demo"
+    dest: "{{ app_source_dir }}/{{ app_war }}"
+    owner: "{{ was_user }}"
+    group: "{{ was_group }}"
+    mode: "0644"
+    force: false
+  when: not local_war_check.stat.exists
+
+- name: Ensure scripts directory exists on Dmgr
+  ansible.builtin.file:
+    path: "{{ dmgr_profile_path }}/scripts"
+    state: directory
+    owner: "{{ was_user }}"
+    group: "{{ was_group }}"
+    mode: "0755"
+
+- name: Copy wsadmin deployment script to Dmgr
+  ansible.builtin.copy:
+    src: "{{ wsadmin_scripts_dir }}/deploy-app.py"
+    dest: "{{ dmgr_profile_path }}/scripts/deploy-app.py"
+    owner: "{{ was_user }}"
+    group: "{{ was_group }}"
+    mode: "0755"
+
+- name: Deploy application via wsadmin
+  ansible.builtin.command:
+    cmd: >-
+      {{ was_home }}/bin/wsadmin.sh
+      -lang jython
+      -f {{ dmgr_profile_path }}/scripts/deploy-app.py
+      -host {{ dmgr_host }}
+      -port {{ dmgr_soap_port }}
+      -user {{ was_admin_user }}
+      -password {{ was_admin_password }}
+  become: true
+  become_user: "{{ was_user }}"
+  environment:
+    CELL_NAME: "{{ cell_name }}"
+    CLUSTER_NAME: "{{ cluster_name }}"
+    APP_NAME: "{{ app_name }}"
+    APP_PATH: "{{ app_source_dir }}/{{ app_war }}"
+    CONTEXT_ROOT: "{{ app_context_root }}"
+  register: deploy_result
+  changed_when: "'deployed successfully' in deploy_result.stdout"
+
+- name: Display deployment output
+  ansible.builtin.debug:
+    msg: "{{ deploy_result.stdout_lines }}"
+
+- name: Copy application to cluster member installedApps directories
+  ansible.builtin.copy:
+    src: "{{ app_source_dir }}/{{ app_war }}"
+    dest: "{{ dmgr_profile_path }}/installedApps/{{ cell_name }}/{{ app_war }}"
+    owner: "{{ was_user }}"
+    group: "{{ was_group }}"
+    mode: "0644"
+    remote_src: true
+
+- name: Include health check tasks
+  ansible.builtin.include_tasks: health-check.yml
+  when: deploy_verify_after
+  tags: [verify]

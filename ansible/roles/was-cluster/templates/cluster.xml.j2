@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- {{ ansible_managed }} -->
+<cluster name="{{ cluster_name }}"
+         preferLocal="{{ cluster_prefer_local | lower }}"
+         xmlns:xmi="http://www.omg.org/XMI">
+
+{% for host in groups['was_nodes'] %}
+  <members name="AppServer{{ loop.index }}"
+           nodeName="{{ host }}Node"
+           weight="{{ cluster_weight }}"
+           memberUUID="MEMBER_{{ loop.index }}_{{ host | hash('md5') | truncate(8, True, '') }}">
+    <server serverName="AppServer{{ loop.index }}"
+            nodeName="{{ host }}Node"/>
+  </members>
+{% endfor %}
+
+  <clusterProperties>
+    <property name="sessionReplication" value="NONE"/>
+    <property name="loadBalancePolicy" value="ROUND_ROBIN"/>
+  </clusterProperties>
+
+</cluster>

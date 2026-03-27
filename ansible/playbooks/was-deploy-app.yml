@@ -1,0 +1,75 @@
+---
+# was-deploy-app.yml — Deploy Application to WAS ND Cluster
+#
+# Deploys the nexus-app WAR to the WAS ND cluster via wsadmin,
+# then runs a health check to verify all components are healthy.
+#
+# Usage:
+#   ansible-playbook -i inventory/hosts.ini playbooks/was-deploy-app.yml
+#   ansible-playbook -i inventory/hosts.ini playbooks/was-deploy-app.yml --tags deploy
+#   ansible-playbook -i inventory/hosts.ini playbooks/was-deploy-app.yml --tags verify
+#
+# Prerequisites:
+#   - was-install.yml and was-cluster.yml have been run
+#   - Optionally: 'mvn package' in app/ to build the WAR
+
+- name: Deploy Application to WAS ND Cluster
+  hosts: dmgr
+  become: true
+  gather_facts: true
+
+  pre_tasks:
+    - name: Validate Dmgr profile exists
+      ansible.builtin.stat:
+        path: "{{ was_home }}/profiles/Dmgr01/config/cells/{{ cell_name }}/cell.xml"
+      register: dmgr_check
+      failed_when: not dmgr_check.stat.exists
+      tags: [always]
+
+    - name: Validate cluster exists
+      ansible.builtin.stat:
+        path: "{{ was_home }}/profiles/Dmgr01/config/cells/{{ cell_name }}/clusters/{{ cluster_name }}/cluster.xml"
+      register: cluster_check
+      failed_when: not cluster_check.stat.exists
+      tags: [always]
+
+    - name: Display deployment info
+      ansible.builtin.debug:
+        msg: |
+          Deploying {{ app_name }} ({{ app_war }})
+          Target cluster: {{ cluster_name }}
+          Context root: {{ app_context_root }}
+          Cell: {{ cell_name }}
+      tags: [always]
+
+  roles:
+    - role: was-deploy
+      tags: [deploy]
+
+  post_tasks:
+    - name: Verify WAR in installedApps
+      ansible.builtin.stat:
+        path: "{{ was_home }}/profiles/Dmgr01/installedApps/{{ cell_name }}/{{ app_war }}"
+      register: app_check
+      tags: [verify]
+
+    - name: Assert application is deployed
+      ansible.builtin.assert:
+        that: app_check.stat.exists
+        success_msg: "{{ app_name }} deployed to {{ cell_name }}"
+        fail_msg: "Application WAR not found in installedApps"
+      tags: [verify]
+
+    - name: Display deployment summary
+      ansible.builtin.debug:
+        msg: |
+          ════════════════════════════════════════════════
+           Application Deployment Complete
+          ════════════════════════════════════════════════
+           App:     {{ app_name }}
+           WAR:     {{ app_war }}
+           Context: {{ app_context_root }}
+           Cluster: {{ cluster_name }}
+           URL:     http://nexus-ihs.{{ domain }}{{ app_context_root }}/
+          ════════════════════════════════════════════════
+      tags: [verify]

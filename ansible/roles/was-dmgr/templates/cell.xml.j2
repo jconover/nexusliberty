@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- {{ ansible_managed }} -->
+<cell name="{{ cell_name }}"
+      cellType="DISTRIBUTED"
+      xmlns:xmi="http://www.omg.org/XMI">
+  <nodes>
+    <node name="{{ was_node_name }}" profileName="{{ was_profile_name }}" type="DEPLOYMENT_MANAGER"/>
+{% for host in groups['was_nodes'] %}
+    <node name="{{ hostvars[host]['inventory_hostname'] }}Node" profileName="AppSrv0{{ loop.index }}" type="MANAGED"/>
+{% endfor %}
+  </nodes>
+</cell>

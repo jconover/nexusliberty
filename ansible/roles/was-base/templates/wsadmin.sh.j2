@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+# {{ ansible_managed }}
+# Mock wsadmin.sh — simulates the WAS administrative scripting interface
+# In production, this launches the Jython/Jacl scripting shell connected
+# to a running WAS server process via SOAP or RMI.
+
+SCRIPT_FILE=""
+HOST="{{ dmgr_host }}"
+PORT="{{ dmgr_soap_port }}"
+USER="{{ was_admin_user }}"
+LANG="jython"
+
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    -f)       shift; SCRIPT_FILE="$1" ;;
+    -host)    shift; HOST="$1" ;;
+    -port)    shift; PORT="$1" ;;
+    -user)    shift; USER="$1" ;;
+    -password) shift ;;  # consume but don't store
+    -lang)    shift; LANG="$1" ;;
+    *)        ;;
+  esac
+  shift
+done
+
+echo "WASX7209I: Connected to process \"dmgr\" on node nexus-dmgrNode using SOAP connector;"
+echo "           The type of process is: DeploymentManager"
+echo "WASX7031I: For help, type: \"print Help.help()\""
+
+if [[ -n "$SCRIPT_FILE" ]]; then
+  if [[ -f "$SCRIPT_FILE" ]]; then
+    echo "WASX7303I: Executing script: $SCRIPT_FILE"
+    python3 "$SCRIPT_FILE" 2>/dev/null || echo "WASX7303I: Script completed: $SCRIPT_FILE"
+  else
+    echo "WASX7304E: Script file not found: $SCRIPT_FILE"
+    exit 1
+  fi
+fi

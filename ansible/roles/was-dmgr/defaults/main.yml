@@ -1,0 +1,14 @@
+---
+# was-dmgr role defaults
+
+was_profile_name: Dmgr01
+was_profile_path: "{{ was_home }}/profiles/{{ was_profile_name }}"
+was_profile_template: management
+was_server_name: dmgr
+
+# Dmgr ports
+dmgr_soap_port: 8879
+dmgr_admin_port: 9060
+dmgr_admin_secure_port: 9043
+dmgr_bootstrap_port: 9809
+dmgr_dcs_unicast_port: 7277

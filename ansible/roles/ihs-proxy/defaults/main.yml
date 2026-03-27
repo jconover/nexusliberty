@@ -1,0 +1,27 @@
+---
+# ihs-proxy role defaults
+
+ihs_home: /opt/IBM/HTTPServer
+plugin_home: /opt/IBM/WebSphere/Plugins
+
+ihs_http_port: 80
+ihs_https_port: 443
+ihs_admin_port: 8008
+
+ihs_server_name: nexus-ihs.nexuslab.local
+ihs_admin_email: wasadmin@nexuslab.local
+
+# Plugin configuration
+plugin_cfg_path: "{{ plugin_home }}/config/webserver1/plugin-cfg.xml"
+plugin_log_path: "{{ plugin_home }}/logs/webserver1/http_plugin.log"
+plugin_log_level: Error
+
+# Load balancing
+plugin_lb_policy: Round Robin
+plugin_retry_interval: 60
+plugin_connect_timeout: 5
+
+# TLS (placeholder paths — Ansible can deploy real certs)
+ihs_tls_enabled: false
+ihs_tls_cert: "{{ ihs_home }}/conf/ihs-cert.pem"
+ihs_tls_key: "{{ ihs_home }}/conf/ihs-key.pem"

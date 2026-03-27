@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# {{ ansible_managed }}
+# Mock versionInfo.sh — simulates WAS version reporting tool
+
+echo "WVER0010I: Copyright (c) IBM Corporation 2002-2024; All rights reserved."
+echo ""
+echo "--------------------------------------------------------------------------------"
+echo "IBM WebSphere Product Installation Status Report"
+echo "--------------------------------------------------------------------------------"
+echo ""
+echo "Report at date/time: $(date)"
+echo ""
+echo "Product Directory: {{ was_home }}"
+echo ""
+echo "Product Name: IBM WebSphere Application Server"
+echo "Product ID: com.ibm.websphere.{{ was_edition }}"
+echo "Product Version: {{ was_version }}"
+echo "Product Build Level: cf152243.01"
+echo "Product Build Date: 2024-01-15"
+echo ""
+echo "Java SE Version: $(java -version 2>&1 | head -1)"
+echo "Java Home: {{ java_home }}"
+echo ""
+echo "--------------------------------------------------------------------------------"
+echo "End of Installation Status Report"
+echo "--------------------------------------------------------------------------------"

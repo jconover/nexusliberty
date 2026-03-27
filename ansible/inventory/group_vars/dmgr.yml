@@ -1,0 +1,11 @@
+---
+# Deployment Manager specific variables
+
+was_profile_name: Dmgr01
+was_profile_path: "{{ was_home }}/profiles/{{ was_profile_name }}"
+was_node_name: nexus-dmgrNode
+was_server_name: dmgr
+
+# Dmgr-specific ports
+was_bootstrap_port: 9809
+was_dcs_unicast_port: 7277

@@ -1,0 +1,13 @@
+---
+# IBM HTTP Server specific variables
+
+ihs_http_port: 80
+ihs_https_port: 443
+ihs_admin_port: 8008
+
+# Plugin config
+plugin_cfg_path: "{{ plugin_home }}/config/webserver1/plugin-cfg.xml"
+plugin_log_path: "{{ plugin_home }}/logs/webserver1/http_plugin.log"
+
+# Virtual host routing
+ihs_server_name: nexus-ihs.nexuslab.local

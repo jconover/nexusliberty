@@ -1,0 +1,28 @@
+---
+# ihs-proxy/tasks/configure.yml — Deploy IHS configuration
+
+- name: Deploy httpd.conf
+  ansible.builtin.template:
+    src: httpd.conf.j2
+    dest: "{{ ihs_home }}/conf/httpd.conf"
+    owner: "{{ was_user }}"
+    group: "{{ was_group }}"
+    mode: "0644"
+    backup: true
+  notify: restart ihs
+
+- name: Deploy IHS landing page
+  ansible.builtin.template:
+    src: index.html.j2
+    dest: "{{ ihs_home }}/htdocs/index.html"
+    owner: "{{ was_user }}"
+    group: "{{ was_group }}"
+    mode: "0644"
+
+- name: Deploy apachectl control script
+  ansible.builtin.template:
+    src: apachectl.j2
+    dest: "{{ ihs_home }}/bin/apachectl"
+    owner: "{{ was_user }}"
+    group: "{{ was_group }}"
+    mode: "0755"

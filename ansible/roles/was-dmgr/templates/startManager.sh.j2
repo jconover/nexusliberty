@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# {{ ansible_managed }}
+# Mock startManager.sh — simulates starting the WAS Deployment Manager
+
+PROFILE_HOME="{{ was_profile_path }}"
+LOG_FILE="{{ was_log_dir }}/startManager.log"
+
+echo "ADMU0116I: Tool information is being logged in ${LOG_FILE}"
+echo "ADMU0128I: Starting tool with the Dmgr01 profile"
+echo "ADMU3100I: Server dmgr open for e-business; process id is $$"
+echo "ADMU3000I: Server dmgr start completed"
+
+# Record state for Ansible idempotency checks
+echo "STARTED $(date -Iseconds)" > "${PROFILE_HOME}/.dmgr.state"

@@ -1,0 +1,17 @@
+---
+# was-base/tasks/prereqs.yml — Install OS prerequisites for WAS ND
+
+- name: Install WAS prerequisite packages
+  ansible.builtin.dnf:
+    name: "{{ was_prereq_packages }}"
+    state: present
+  register: prereq_result
+  retries: 3
+  delay: 5
+  until: prereq_result is succeeded
+
+- name: Ensure firewalld is running
+  ansible.builtin.systemd:
+    name: firewalld
+    state: started
+    enabled: true

@@ -1,0 +1,28 @@
+---
+# was-base/tasks/directories.yml — Create IBM standard directory structure
+
+- name: Create IBM product directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ was_user }}"
+    group: "{{ was_group }}"
+    mode: "0755"
+  loop:
+    - "{{ was_home }}"
+    - "{{ was_home }}/bin"
+    - "{{ was_home }}/java/bin"
+    - "{{ was_home }}/profiles"
+    - "{{ was_home }}/properties"
+    - /opt/IBM/WebSphere/Plugins
+    - /opt/IBM/HTTPServer
+    - "{{ im_home }}"
+    - "{{ was_log_dir }}"
+
+- name: Create WAS properties directory
+  ansible.builtin.file:
+    path: "{{ was_home }}/properties"
+    state: directory
+    owner: "{{ was_user }}"
+    group: "{{ was_group }}"
+    mode: "0755"

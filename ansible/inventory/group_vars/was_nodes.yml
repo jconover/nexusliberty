@@ -1,0 +1,15 @@
+---
+# Managed node (AppServer) specific variables
+
+was_server_type: APPLICATION_SERVER
+
+# JVM tuning defaults for managed nodes
+was_jvm_initial_heap: 512
+was_jvm_max_heap: 1024
+was_generic_jvm_args: "-Xshareclasses:none"
+
+# Managed node ports
+was_http_port: 9080
+was_https_port: 9443
+was_node_agent_soap_port: 8878
+was_soap_port: 8880
