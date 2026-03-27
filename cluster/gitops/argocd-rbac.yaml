@@ -1,0 +1,37 @@
+---
+# Grant the Argo CD service account permission to manage
+# WebSphereLibertyApplication resources in liberty-apps namespace.
+# The OpenShift GitOps operator creates the SA in openshift-gitops.
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: argocd-liberty-operator-manager
+rules:
+  - apiGroups:
+      - liberty.websphere.ibm.com
+    resources:
+      - webspherelibertyapplications
+      - webspherelibertytraces
+      - webspherelibertydumps
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: argocd-liberty-operator-manager-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: argocd-liberty-operator-manager
+subjects:
+  - kind: ServiceAccount
+    name: openshift-gitops-argocd-application-controller
+    namespace: openshift-gitops

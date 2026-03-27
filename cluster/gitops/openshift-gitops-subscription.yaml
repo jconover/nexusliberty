@@ -1,0 +1,21 @@
+---
+# OpenShift GitOps Operator (Argo CD)
+# Install via: oc apply -f cluster/gitops/openshift-gitops-subscription.yaml
+#
+# This installs the Red Hat OpenShift GitOps operator which provides
+# Argo CD for continuous delivery to the OKD cluster.
+# After install, Argo CD is available in the openshift-gitops namespace
+# with a Route auto-created at:
+#   https://openshift-gitops-server-openshift-gitops.apps.nexuslab.nexuslab.local
+
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: openshift-gitops-operator
+  namespace: openshift-operators
+spec:
+  channel: latest
+  installPlanApproval: Automatic
+  name: openshift-gitops-operator
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
