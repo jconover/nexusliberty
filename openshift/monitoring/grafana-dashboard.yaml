@@ -1,0 +1,293 @@
+---
+# Grafana Dashboard ConfigMap — Liberty JVM & Request Metrics
+# Import via Grafana UI (Dashboards → Import → paste JSON) or mount
+# as a ConfigMap if using the Grafana Operator with dashboard discovery.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nexusliberty-grafana-dashboard
+  namespace: liberty-apps
+  labels:
+    app.kubernetes.io/name: nexusliberty-app
+    app.kubernetes.io/part-of: nexusliberty
+    app.kubernetes.io/component: monitoring
+    grafana_dashboard: "true"
+data:
+  nexusliberty-dashboard.json: |
+    {
+      "annotations": {
+        "list": [
+          {
+            "builtIn": 1,
+            "datasource": "-- Grafana --",
+            "enable": true,
+            "hide": true,
+            "iconColor": "rgba(0, 211, 255, 1)",
+            "name": "Annotations & Alerts",
+            "type": "dashboard"
+          }
+        ]
+      },
+      "description": "NexusLiberty — Liberty JVM, HTTP request, and session metrics from MicroProfile Metrics",
+      "editable": true,
+      "id": null,
+      "uid": "nexusliberty-liberty-metrics",
+      "title": "NexusLiberty — Liberty Application Metrics",
+      "tags": ["liberty", "nexusliberty", "microprofile", "jvm"],
+      "timezone": "browser",
+      "refresh": "30s",
+      "time": {
+        "from": "now-1h",
+        "to": "now"
+      },
+      "templating": {
+        "list": [
+          {
+            "name": "namespace",
+            "type": "constant",
+            "current": { "value": "liberty-apps" },
+            "hide": 2
+          },
+          {
+            "name": "pod",
+            "type": "query",
+            "datasource": "Prometheus",
+            "query": "label_values(base_memory_usedHeap_bytes{namespace=\"$namespace\"}, pod)",
+            "refresh": 2,
+            "includeAll": true,
+            "multi": true,
+            "current": { "text": "All", "value": "$__all" }
+          }
+        ]
+      },
+      "panels": [
+        {
+          "title": "Pod Status",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+          "targets": [
+            {
+              "expr": "count(up{namespace=\"$namespace\", job=~\".*nexusliberty.*\"} == 1)",
+              "legendFormat": "Healthy Pods"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "thresholds": {
+                "steps": [
+                  { "color": "red", "value": 0 },
+                  { "color": "yellow", "value": 1 },
+                  { "color": "green", "value": 2 }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Request Rate (req/s)",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+          "targets": [
+            {
+              "expr": "sum(rate(base_REST_request_total{namespace=\"$namespace\"}[5m]))",
+              "legendFormat": "Total"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "reqps"
+            }
+          }
+        },
+        {
+          "title": "Error Rate (5xx)",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
+          "targets": [
+            {
+              "expr": "sum(rate(base_REST_request_total{namespace=\"$namespace\", status=~\"5..\"}[5m])) / sum(rate(base_REST_request_total{namespace=\"$namespace\"}[5m])) or vector(0)",
+              "legendFormat": "5xx Rate"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percentunit",
+              "thresholds": {
+                "steps": [
+                  { "color": "green", "value": 0 },
+                  { "color": "yellow", "value": 0.01 },
+                  { "color": "red", "value": 0.05 }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "Avg Response Time",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 6, "x": 18, "y": 0 },
+          "targets": [
+            {
+              "expr": "rate(base_REST_request_elapsedTime_seconds_sum{namespace=\"$namespace\"}[5m]) / rate(base_REST_request_elapsedTime_seconds_count{namespace=\"$namespace\"}[5m])",
+              "legendFormat": "Avg Latency"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s",
+              "thresholds": {
+                "steps": [
+                  { "color": "green", "value": 0 },
+                  { "color": "yellow", "value": 1 },
+                  { "color": "red", "value": 2 }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "title": "JVM Heap Usage",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+          "targets": [
+            {
+              "expr": "base_memory_usedHeap_bytes{namespace=\"$namespace\", pod=~\"$pod\"}",
+              "legendFormat": "{{ pod }} — Used"
+            },
+            {
+              "expr": "base_memory_maxHeap_bytes{namespace=\"$namespace\", pod=~\"$pod\"}",
+              "legendFormat": "{{ pod }} — Max"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "bytes",
+              "custom": {
+                "fillOpacity": 15,
+                "lineWidth": 2
+              }
+            }
+          }
+        },
+        {
+          "title": "JVM CPU Usage",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+          "targets": [
+            {
+              "expr": "base_cpu_processCpuLoad{namespace=\"$namespace\", pod=~\"$pod\"}",
+              "legendFormat": "{{ pod }} — Process CPU"
+            },
+            {
+              "expr": "base_cpu_systemCpuLoad{namespace=\"$namespace\", pod=~\"$pod\"}",
+              "legendFormat": "{{ pod }} — System CPU"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percentunit",
+              "min": 0,
+              "max": 1,
+              "custom": {
+                "fillOpacity": 15,
+                "lineWidth": 2
+              }
+            }
+          }
+        },
+        {
+          "title": "HTTP Request Rate by Pod",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
+          "targets": [
+            {
+              "expr": "rate(base_REST_request_total{namespace=\"$namespace\", pod=~\"$pod\"}[5m])",
+              "legendFormat": "{{ pod }} — {{ method }} {{ path }}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "reqps",
+              "custom": {
+                "fillOpacity": 10,
+                "lineWidth": 2
+              }
+            }
+          }
+        },
+        {
+          "title": "HTTP Response Time (p50 / p95 / p99)",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.50, rate(base_REST_request_elapsedTime_seconds_bucket{namespace=\"$namespace\"}[5m]))",
+              "legendFormat": "p50"
+            },
+            {
+              "expr": "histogram_quantile(0.95, rate(base_REST_request_elapsedTime_seconds_bucket{namespace=\"$namespace\"}[5m]))",
+              "legendFormat": "p95"
+            },
+            {
+              "expr": "histogram_quantile(0.99, rate(base_REST_request_elapsedTime_seconds_bucket{namespace=\"$namespace\"}[5m]))",
+              "legendFormat": "p99"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s",
+              "custom": {
+                "fillOpacity": 5,
+                "lineWidth": 2
+              }
+            }
+          }
+        },
+        {
+          "title": "JVM Thread Count",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 20 },
+          "targets": [
+            {
+              "expr": "base_thread_count{namespace=\"$namespace\", pod=~\"$pod\"}",
+              "legendFormat": "{{ pod }} — Active"
+            },
+            {
+              "expr": "base_thread_daemon_count{namespace=\"$namespace\", pod=~\"$pod\"}",
+              "legendFormat": "{{ pod }} — Daemon"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "custom": {
+                "fillOpacity": 10,
+                "lineWidth": 2
+              }
+            }
+          }
+        },
+        {
+          "title": "GC Pause Time",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 20 },
+          "targets": [
+            {
+              "expr": "rate(base_gc_time_total{namespace=\"$namespace\", pod=~\"$pod\"}[5m])",
+              "legendFormat": "{{ pod }} — {{ gc }}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "ms",
+              "custom": {
+                "fillOpacity": 15,
+                "lineWidth": 2
+              }
+            }
+          }
+        }
+      ],
+      "schemaVersion": 39,
+      "version": 1
+    }
