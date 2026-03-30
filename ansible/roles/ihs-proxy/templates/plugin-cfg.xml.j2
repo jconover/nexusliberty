@@ -15,6 +15,26 @@
                  RemoveSpecialHeaders="true"
                  RetryInterval="{{ plugin_retry_interval }}">
 
+{% if liberty_mode and liberty_endpoints | length > 0 %}
+{# Liberty mode — target OKD Liberty pod endpoints #}
+{% for ep in liberty_endpoints %}
+    <Server ConnectTimeout="{{ plugin_connect_timeout }}"
+            ExtendedHandshake="false"
+            MaxConnections="-1"
+            Name="{{ ep.name }}"
+            WaitForContinue="false">
+      <Transport Hostname="{{ ep.host }}" Port="{{ ep.http_port | default(9080) }}" Protocol="http"/>
+      <Transport Hostname="{{ ep.host }}" Port="{{ ep.https_port | default(9443) }}" Protocol="https"/>
+    </Server>
+
+{% endfor %}
+    <PrimaryServers>
+{% for ep in liberty_endpoints %}
+      <Server Name="{{ ep.name }}"/>
+{% endfor %}
+    </PrimaryServers>
+{% else %}
+{# Legacy WAS ND mode — target Vagrant/on-prem WAS nodes #}
 {% for host in groups['was_nodes'] %}
 {% set idx = loop.index %}
 {% set node_http = hostvars[host].get('was_http_port', 9080) %}
@@ -34,6 +54,7 @@
       <Server Name="{{ host }}_AppServer{{ loop.index }}"/>
 {% endfor %}
     </PrimaryServers>
+{% endif %}
 
   </ServerCluster>
 

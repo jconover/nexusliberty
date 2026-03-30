@@ -1,0 +1,18 @@
+---
+# Service exposing the IHS load balancer within the cluster.
+apiVersion: v1
+kind: Service
+metadata:
+  name: nexusliberty-ihs
+  namespace: liberty-apps
+  labels:
+    app.kubernetes.io/name: nexusliberty-ihs
+    app.kubernetes.io/part-of: nexusliberty
+    app.kubernetes.io/component: load-balancer
+spec:
+  selector:
+    app.kubernetes.io/name: nexusliberty-ihs
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080

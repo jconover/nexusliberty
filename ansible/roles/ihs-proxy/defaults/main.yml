@@ -21,6 +21,16 @@ plugin_lb_policy: Round Robin
 plugin_retry_interval: 60
 plugin_connect_timeout: 5
 
+# Liberty endpoint mode (set to true to target OKD Liberty pods instead of WAS nodes)
+liberty_mode: false
+liberty_endpoints: []
+# Example:
+# liberty_endpoints:
+#   - name: liberty-pod1
+#     host: nexusliberty-app-0.liberty-apps.svc.cluster.local
+#     http_port: 9080
+#     https_port: 9443
+
 # TLS (placeholder paths — Ansible can deploy real certs)
 ihs_tls_enabled: false
 ihs_tls_cert: "{{ ihs_home }}/conf/ihs-cert.pem"
