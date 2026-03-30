@@ -24,8 +24,19 @@ FROM icr.io/appcafe/open-liberty:kernel-slim-java17-openj9-ubi AS runtime
 # Copy server configuration
 COPY --chown=1001:0 docker/liberty-app/server.xml /config/server.xml
 
+# Copy Hazelcast session cache config
+COPY --chown=1001:0 docker/liberty-app/hazelcast-client.xml /config/hazelcast-client.xml
+
 # Install only the Liberty features declared in server.xml
 RUN features.sh
+
+# Download Hazelcast JARs for JCache session replication
+ARG HAZELCAST_VERSION=5.3.6
+RUN mkdir -p /opt/ol/wlp/usr/shared/resources/hazelcast && \
+    curl -fsSL -o /opt/ol/wlp/usr/shared/resources/hazelcast/hazelcast-${HAZELCAST_VERSION}.jar \
+      "https://repo1.maven.org/maven2/com/hazelcast/hazelcast/${HAZELCAST_VERSION}/hazelcast-${HAZELCAST_VERSION}.jar" && \
+    curl -fsSL -o /opt/ol/wlp/usr/shared/resources/hazelcast/hazelcast-kubernetes-2.2.3.jar \
+      "https://repo1.maven.org/maven2/com/hazelcast/hazelcast-kubernetes/2.2.3/hazelcast-kubernetes-2.2.3.jar"
 
 # Copy the application WAR from the build stage
 COPY --chown=1001:0 --from=build /build/target/nexus-app.war /config/apps/nexus-app.war

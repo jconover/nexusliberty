@@ -17,6 +17,7 @@
     <featureManager>
         <feature>webProfile-10.0</feature>
         <feature>microProfile-6.1</feature>
+        <feature>sessionCache-1.0</feature>
     </featureManager>
 
     <!-- ================================================================
@@ -56,6 +57,24 @@
          restrict scrape access rather than HTTP basic auth.
     ================================================================ -->
     <mpMetrics authentication="false"/>
+
+    <!-- ================================================================
+         SESSION CACHE (JCache via Hazelcast)
+         Enables HTTP session replication across Liberty pods.
+         Hazelcast discovers peers using the Kubernetes API — pods in
+         the same namespace with matching label are auto-clustered.
+         Requires RBAC: ServiceAccount must have 'get/list' on pods.
+    ================================================================ -->
+    <library id="hazelcastLib">
+        <fileset dir="${shared.resource.dir}/hazelcast"
+                 includes="*.jar"/>
+    </library>
+
+    <httpSessionCache cacheManagerRef="HazelcastCacheManager"/>
+    <cacheManager id="HazelcastCacheManager"
+                  uri="file:${server.config.dir}/hazelcast-client.xml">
+        <library libraryRef="hazelcastLib"/>
+    </cacheManager>
 
     <!-- ================================================================
          APPLICATION
