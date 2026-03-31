@@ -1,0 +1,78 @@
+---
+# PrometheusRule — alerting rules for Liberty application health.
+# Covers JVM heap pressure, high request error rate, and pod availability.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: nexusliberty-alerts
+  namespace: liberty-apps
+  labels:
+    app.kubernetes.io/name: nexusliberty-app
+    app.kubernetes.io/part-of: nexusliberty
+    app.kubernetes.io/component: monitoring
+spec:
+  groups:
+    - name: nexusliberty.rules
+      rules:
+
+        # Alert when JVM heap usage exceeds 85% for 5 minutes
+        - alert: LibertyHeapUsageHigh
+          expr: |
+            base_memory_usedHeap_bytes{namespace="liberty-apps"}
+            / base_memory_maxHeap_bytes{namespace="liberty-apps"}
+            > 0.85
+          for: 5m
+          labels:
+            severity: warning
+            app: nexusliberty
+          annotations:
+            summary: "Liberty JVM heap usage above 85%"
+            description: >-
+              Pod {{ $labels.pod }} heap usage is {{ $value | humanizePercentage }}
+              for more than 5 minutes.
+
+        # Alert when HTTP 5xx error rate exceeds 5% over 5 minutes
+        - alert: LibertyHighErrorRate
+          expr: |
+            sum(rate(base_REST_request_total{namespace="liberty-apps", status=~"5.."}[5m]))
+            / sum(rate(base_REST_request_total{namespace="liberty-apps"}[5m]))
+            > 0.05
+          for: 5m
+          labels:
+            severity: critical
+            app: nexusliberty
+          annotations:
+            summary: "Liberty HTTP 5xx error rate above 5%"
+            description: >-
+              Error rate is {{ $value | humanizePercentage }} over the last 5 minutes.
+
+        # Alert when fewer than 2 Liberty pods are ready
+        - alert: LibertyPodsUnavailable
+          expr: |
+            kube_deployment_status_replicas_available{
+              namespace="liberty-apps",
+              deployment="nexusliberty-app"
+            } < 2
+          for: 2m
+          labels:
+            severity: critical
+            app: nexusliberty
+          annotations:
+            summary: "Fewer than 2 Liberty pods available"
+            description: >-
+              Only {{ $value }} of 2 expected replicas are available.
+
+        # Alert when average request latency exceeds 2 seconds
+        - alert: LibertyHighLatency
+          expr: |
+            rate(base_REST_request_elapsedTime_seconds_sum{namespace="liberty-apps"}[5m])
+            / rate(base_REST_request_elapsedTime_seconds_count{namespace="liberty-apps"}[5m])
+            > 2
+          for: 5m
+          labels:
+            severity: warning
+            app: nexusliberty
+          annotations:
+            summary: "Liberty average request latency above 2s"
+            description: >-
+              Pod {{ $labels.pod }} average response time is {{ $value | humanizeDuration }}.

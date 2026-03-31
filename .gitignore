@@ -6,4 +6,3 @@ report.html
 
 app/target/
 openshift/pipelines/03-secrets.yaml
-

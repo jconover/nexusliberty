@@ -338,12 +338,12 @@ nexusliberty/
 - [x] Health check via Argo CD self-heal + Liberty readiness/liveness probes
 - [x] README badges (build status, Ansible lint status)
 
-### Phase 5 — HA and Operations (Stretch)
-- [ ] Liberty clustering config (session replication)
-- [ ] IHS load balancing across Liberty instances
-- [ ] Prometheus metrics from Liberty via mpMetrics feature
-- [ ] Grafana dashboard for Liberty JVM/request metrics
-- [ ] Runbook documentation (WAS operational procedures)
+### Phase 5 — HA and Operations ✅
+- [x] Liberty clustering config (session replication)
+- [x] IHS load balancing across Liberty instances
+- [x] Prometheus metrics from Liberty via mpMetrics feature
+- [x] Grafana dashboard for Liberty JVM/request metrics
+- [x] Runbook documentation (WAS operational procedures)
 
 ---
 

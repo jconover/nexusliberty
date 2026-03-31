@@ -1,0 +1,24 @@
+---
+# OKD Route for IHS — exposes the load balancer externally.
+# Traffic flow: client → OKD Router → IHS → Liberty pods
+# This mirrors the enterprise pattern: external LB → IHS → WAS cluster
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: nexusliberty-ihs
+  namespace: liberty-apps
+  labels:
+    app.kubernetes.io/name: nexusliberty-ihs
+    app.kubernetes.io/part-of: nexusliberty
+    app.kubernetes.io/component: load-balancer
+spec:
+  host: nexusliberty-ihs.apps.nexuslab.nexuslab.local
+  to:
+    kind: Service
+    name: nexusliberty-ihs
+    weight: 100
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect

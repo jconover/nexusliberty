@@ -1,0 +1,25 @@
+---
+# ServiceMonitor — instructs OKD's built-in Prometheus to scrape
+# MicroProfile Metrics from Liberty pods at /metrics.
+# Requires user workload monitoring to be enabled on the cluster.
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: nexusliberty-app
+  namespace: liberty-apps
+  labels:
+    app.kubernetes.io/name: nexusliberty-app
+    app.kubernetes.io/part-of: nexusliberty
+    app.kubernetes.io/component: monitoring
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: nexusliberty-app
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 30s
+      scrapeTimeout: 10s
+  namespaceSelector:
+    matchNames:
+      - liberty-apps

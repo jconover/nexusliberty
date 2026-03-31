@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Hazelcast embedded configuration for Liberty session caching.
+  Uses Kubernetes API discovery to find peer Liberty pods in the
+  same namespace. Requires ServiceAccount with pod list/get RBAC.
+-->
+<hazelcast xmlns="http://www.hazelcast.com/schema/config"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://www.hazelcast.com/schema/config
+           https://hazelcast.com/schema/config/hazelcast-config-5.3.xsd">
+
+    <cluster-name>nexusliberty-sessions</cluster-name>
+
+    <network>
+        <join>
+            <!-- Disable multicast — not available in container networks -->
+            <multicast enabled="false"/>
+
+            <!-- Kubernetes API discovery: finds pods by label selector -->
+            <kubernetes enabled="true">
+                <namespace>liberty-apps</namespace>
+                <service-label-name>app.kubernetes.io/name</service-label-name>
+                <service-label-value>nexusliberty-app</service-label-value>
+            </kubernetes>
+        </join>
+    </network>
+
+    <!-- Session cache map — tuned for HTTP sessions -->
+    <map name="com.ibm.ws.session.attr.*">
+        <backup-count>1</backup-count>
+        <time-to-live-seconds>1800</time-to-live-seconds>
+        <eviction eviction-policy="LRU" max-size-policy="PER_NODE" size="10000"/>
+    </map>
+
+    <map name="com.ibm.ws.session.meta.*">
+        <backup-count>1</backup-count>
+        <time-to-live-seconds>1800</time-to-live-seconds>
+        <eviction eviction-policy="LRU" max-size-policy="PER_NODE" size="10000"/>
+    </map>
+
+</hazelcast>
