@@ -13,8 +13,8 @@
   ansible.builtin.blockinfile:
     path: /etc/hosts
     block: |
-      192.168.56.10  nexus-dmgr.{{ domain }}  nexus-dmgr
-      192.168.56.11  nexus-was1.{{ domain }}   nexus-was1
-      192.168.56.12  nexus-was2.{{ domain }}   nexus-was2
-      192.168.56.13  nexus-ihs.{{ domain }}    nexus-ihs
+      {{ hostvars[groups['dmgr'][0]]['ansible_host'] }}  nexus-dmgr.{{ domain }}  nexus-dmgr
+      {{ hostvars[groups['was_nodes'][0]]['ansible_host'] }}  nexus-was1.{{ domain }}   nexus-was1
+      {{ hostvars[groups['was_nodes'][1]]['ansible_host'] }}  nexus-was2.{{ domain }}   nexus-was2
+      {{ hostvars[groups['ihs'][0]]['ansible_host'] }}  nexus-ihs.{{ domain }}    nexus-ihs
     marker: "# {mark} ANSIBLE MANAGED — WAS cell hosts"

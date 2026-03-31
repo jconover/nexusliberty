@@ -1,0 +1,54 @@
+---
+# NetworkPolicy — restricts ingress to Liberty pods.
+# Allows traffic only from:
+#   1. IHS load balancer pods (reverse proxy on port 9080)
+#   2. Peer Liberty pods (Hazelcast session replication on port 5701)
+#   3. Prometheus (metrics scraping on port 9080)
+# All other ingress is denied by default once a NetworkPolicy selects
+# a pod.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: nexusliberty-app-ingress
+  namespace: liberty-apps
+  labels:
+    app.kubernetes.io/name: nexusliberty-app
+    app.kubernetes.io/part-of: nexusliberty
+    app.kubernetes.io/component: network-policy
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: nexusliberty-app
+  policyTypes:
+    - Ingress
+  ingress:
+    # IHS load balancer → Liberty (HTTP traffic)
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: nexusliberty-ihs
+      ports:
+        - protocol: TCP
+          port: 9080
+        - protocol: TCP
+          port: 9443
+
+    # Liberty ↔ Liberty (Hazelcast session replication)
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: nexusliberty-app
+      ports:
+        - protocol: TCP
+          port: 5701
+
+    # Prometheus → Liberty (metrics scraping)
+    # OKD user-workload-monitoring runs in openshift-user-workload-monitoring
+    # namespace. Use namespaceSelector to allow cross-namespace scraping.
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              network.openshift.io/policy-group: monitoring
+      ports:
+        - protocol: TCP
+          port: 9080

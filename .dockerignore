@@ -2,7 +2,6 @@
 docs/
 vagrant/
 ansible/
-terraform/
 openshift/
 scripts/
 cluster/

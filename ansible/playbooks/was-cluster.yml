@@ -37,7 +37,7 @@
   post_tasks:
     - name: Verify Dmgr profile created
       ansible.builtin.stat:
-        path: "{{ was_home }}/profiles/Dmgr01/config/cells/{{ cell_name }}/cell.xml"
+        path: "{{ dmgr_profile_path }}/config/cells/{{ cell_name }}/cell.xml"
       register: cell_check
 
     - name: Assert Dmgr profile exists
@@ -92,7 +92,7 @@
   post_tasks:
     - name: Verify cluster config
       ansible.builtin.stat:
-        path: "{{ was_home }}/profiles/Dmgr01/config/cells/{{ cell_name }}/clusters/{{ cluster_name }}/cluster.xml"
+        path: "{{ dmgr_profile_path }}/config/cells/{{ cell_name }}/clusters/{{ cluster_name }}/cluster.xml"
       register: cluster_check
 
     - name: Assert cluster exists

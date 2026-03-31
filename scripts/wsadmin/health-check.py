@@ -228,8 +228,11 @@ def main():
     ]
 
     for check_name, check_func in checks:
-        if not check_func():
-            health_issues.append("%s check reported issues" % check_name)
+        try:
+            if not check_func():
+                health_issues.append("%s check reported issues" % check_name)
+        except Exception as e:
+            health_issues.append("%s check failed with exception: %s" % (check_name, e))
 
     print_summary()
 

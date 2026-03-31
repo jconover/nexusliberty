@@ -6,7 +6,7 @@ set -euo pipefail
 echo ">>> NexusLiberty WAS ND Simulation — Bootstrap"
 
 # Ensure Python 3 is available (Ansible requirement)
-dnf install -y python3 python3-pip libselinux-python3 2>/dev/null || true
+dnf install -y python3 python3-pip python3-libselinux 2>/dev/null || true
 
 # Common packages used by WAS/IHS administration
 dnf install -y \

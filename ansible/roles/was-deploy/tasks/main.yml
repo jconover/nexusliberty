@@ -3,7 +3,7 @@
 
 - name: Set Dmgr profile path
   ansible.builtin.set_fact:
-    dmgr_profile_path: "{{ was_home }}/profiles/Dmgr01"
+    dmgr_profile_path: "{{ was_home }}/profiles/{{ was_dmgr_profile_name }}"
 
 - name: Ensure app staging directory exists
   ansible.builtin.file:

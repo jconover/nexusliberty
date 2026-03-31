@@ -1,0 +1,18 @@
+---
+# ResourceQuota — caps total resource consumption in the liberty-apps
+# namespace to prevent runaway workloads from starving cluster services.
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: liberty-apps-quota
+  namespace: liberty-apps
+  labels:
+    app.kubernetes.io/part-of: nexusliberty
+    app.kubernetes.io/component: monitoring
+spec:
+  hard:
+    requests.cpu: "2"
+    requests.memory: 2Gi
+    limits.cpu: "4"
+    limits.memory: 4Gi
+    pods: "10"

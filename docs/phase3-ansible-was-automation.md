@@ -10,6 +10,10 @@ Step-by-step guide to bring up the Vagrant WAS ND simulation environment and run
 - `ansible.posix` collection installed (`ansible-galaxy collection install ansible.posix`)
 - At least 6GB free RAM for all 4 VMs (or run them selectively)
 
+## Simulation Boundary
+
+> **Note:** This entire phase runs in a **simulated** WAS ND environment. No licensed IBM software is installed. The Vagrant VMs replicate the directory structure, configuration files, and automation interfaces of a real WAS ND cell, but there are no running WAS processes. Ansible playbooks, wsadmin scripts, and IHS configuration are fully functional automation — they just operate against the simulation scaffolding rather than live middleware. This is intentional: the goal is to demonstrate the automation patterns and Ansible role design, not to run a licensed WAS installation.
+
 ## What We're Building
 
 ```
