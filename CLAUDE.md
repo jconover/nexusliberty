@@ -3,6 +3,21 @@
 
 ---
 
+## Table of Contents
+
+- [Project Overview](#project-overview)
+- [Infrastructure](#infrastructure-homelab-cluster-3-node)
+- [Project Architecture](#project-architecture)
+- [Tech Stack](#tech-stack)
+- [Repository Structure](#repository-structure)
+- [Project Phases](#project-phases-and-milestones)
+- [Key Commands Reference](#key-commands-reference)
+- [Key Configuration Files](#key-configuration-files)
+- [Security Context Constraints](#security-context-constraints-scc-notes)
+- [Notes for Claude Code Sessions](#notes-for-claude-code-sessions)
+
+---
+
 ## Project Overview
 
 **NexusLiberty** is a portfolio project demonstrating enterprise middleware modernization
@@ -12,18 +27,11 @@ legacy WAS provisioning, Liberty migration, container packaging, OpenShift deplo
 automated operations — all tied together with Ansible, GitHub Actions CI/CD, and
 infrastructure-as-code.
 
-> This project is built with [Claude Code](https://claude.ai/code) as the primary AI
-> development assistant. The CLAUDE.md file provides Claude Code with full project context,
-> architecture decisions, and operational runbook so every session starts with complete
-> awareness of the platform.
-
 **Focus Area**: Enterprise Middleware Modernization (IBM WebSphere / Liberty / OpenShift)
 **Portfolio Site**: devopsnexus.io
 **GitHub**: github.com/jconover/nexusliberty
 
----
-
-## Business Narrative
+### Business Narrative
 
 A simulated enterprise has a legacy WAS ND (Network Deployment) environment running
 business-critical Java applications. The modernization mandate is to:
@@ -34,15 +42,10 @@ business-critical Java applications. The modernization mandate is to:
 4. Deploy and operate containerized Liberty on OpenShift (OKD)
 5. Establish a CI/CD pipeline for middleware deployments
 
-This mirrors real-world enterprise modernization patterns happening across the financial
-services, healthcare, and retail sectors where WAS environments are being containerized
-and shifted to OpenShift.
-
 ---
 
 ## Infrastructure: Homelab Cluster (3-node)
 
-### Hardware
 - **3x Mini PC nodes**: AMD Ryzen 7 (8C/16T), 32GB LPDDR5, 1TB NVMe each
 - **Network**: Home lab network with static DHCP reservations
 - **Role**: Full OKD 4.x cluster — converged control plane + worker nodes
@@ -56,104 +59,7 @@ api.<cluster>.<domain>         192.168.68.100   (API VIP)
 *.apps.<cluster>.<domain>      192.168.68.101   (Ingress VIP / wildcard DNS)
 ```
 
----
-
-## Phase 0: Cluster Wipe and OKD Installation
-
-### Step 0.1 — Pre-flight Checklist
-
-Before wiping anything:
-- [ ] Note current kubeadm cluster state (kubectl get nodes, namespaces, pvs)
-- [ ] Backup any manifests or configs you want to keep (~/k8s-backup/)
-- [ ] Confirm static IPs or DHCP reservations set on your router for all 3 nodes
-- [ ] Set up DNS entries (or /etc/hosts on your workstation as fallback):
-  - api.\<cluster\>.\<domain\> → API VIP
-  - *apps.\<cluster\>.\<domain\> → Ingress VIP
-- [ ] Have a USB drive (8GB+) ready for bootstrap ISO
-- [ ] Create free Red Hat Developer account at console.redhat.com if not already done
-
-### Step 0.2 — Wipe Existing Nodes
-
-SSH into each node and run:
-
-```bash
-# On each node — destroys kubeadm setup and clears disk for fresh install
-sudo kubeadm reset -f
-sudo rm -rf /etc/kubernetes /var/lib/etcd /var/lib/kubelet /etc/cni /opt/cni
-sudo iptables -F && sudo iptables -X
-sudo ipvsadm --clear 2>/dev/null || true
-
-# Optional: full disk wipe if you want completely clean state
-# WARNING: This destroys everything on the node
-# sudo wipefs -a /dev/nvme0n1
-```
-
-> **Note**: OKD installs RHCOS (Red Hat CoreOS) automatically — Ubuntu/existing OS
-> is wiped during install. You do not need to manually prepare the OS.
-
-### Step 0.3 — OKD Installation via Assisted Installer (Recommended)
-
-The Assisted Installer is the easiest path for bare metal OKD. It handles
-bootstrap automatically — no separate bootstrap node required.
-
-**Using OKD/OpenShift Assisted Installer:**
-
-1. Go to: https://console.redhat.com/openshift/assisted-installer/clusters
-2. Click **Create Cluster**
-3. Select:
-   - Cluster name: your choice
-   - Base domain: your local domain
-   - OpenShift version: Latest stable OKD 4.x
-   - Installation type: **Full cluster** (not SNO)
-   - Control plane nodes: **3 (highly available)**
-   - Network config: **DHCP only** (if using DHCP reservations)
-4. Operators screen: **skip all** — add post-install via OperatorHub
-5. Download the **Minimal Discovery ISO**
-6. Write to USB via Balena Etcher
-7. Boot each node from USB — nodes appear in Assisted Installer UI
-8. Assign all 3 nodes as **Control Plane** role (auto-becomes worker too)
-9. Set **API IP** and **Ingress IP** (must be outside DHCP pool)
-10. Click **Install** — ~45-90 minutes
-
-**Alternative: Agent-Based Installer (offline/air-gapped)**
-See: https://docs.okd.io/latest/installing/installing_with_agent_based_installer/
-
-### Step 0.4 — Post-Install Validation
-
-```bash
-# Install oc CLI on your workstation
-curl -LO https://mirror.openshift.com/pub/openshift-v4/clients/ocp/stable/openshift-client-linux.tar.gz
-tar -xzf openshift-client-linux.tar.gz
-sudo mv oc kubectl /usr/local/bin/
-
-# Download kubeconfig from Assisted Installer completion screen
-mkdir -p ~/.kube
-mv ~/Downloads/kubeconfig ~/.kube/config
-
-# Verify cluster
-oc get nodes
-oc get clusterversion
-oc get clusteroperators
-# All operators should show AVAILABLE=True
-# Nodes should show Ready status
-
-# Login via CLI
-oc login https://api.<cluster>.<domain>:6443 \
-  --username kubeadmin \
-  --password <password-from-installer>
-```
-
-### Step 0.5 — Install WebSphere Liberty Operator
-
-```bash
-# Create namespace for Liberty workloads
-oc new-project liberty-apps
-
-# Install IBM WebSphere Liberty Operator from OperatorHub
-# Via web console: Operators → OperatorHub → search "WebSphere Liberty"
-# Or via CLI:
-oc apply -f operators/websphere-liberty-operator.yaml
-```
+> For OKD cluster installation steps, see `docs/phase1-liberty-operator-install.md`.
 
 ---
 
@@ -177,12 +83,13 @@ oc apply -f operators/websphere-liberty-operator.yaml
    ┌─────────────┐  ┌───────────┐  ┌──────────────┐
    │  Vagrant    │  │  Docker   │  │  OKD Cluster │
    │  WAS VMs    │  │  Registry │  │  (3-node     │
-   │  (on-prem   │  │  (Quay or │  │   homelab)   │
-   │  simulate)  │  │   GHCR)   │  │              │
-   └─────────────┘  └───────────┘  │  Liberty     │
+   │  (on-prem   │  │  (GHCR)   │  │   homelab)   │
+   │  simulate)  │  └───────────┘  │              │
+   └─────────────┘                 │  Liberty     │
                                    │  Operator    │
-                                   │  + Routes    │
+                                   │  + Argo CD   │
                                    │  + IHS LB    │
+                                   │  + Monitoring│
                                    └──────────────┘
 ```
 
@@ -193,18 +100,18 @@ oc apply -f operators/websphere-liberty-operator.yaml
 | Layer | Technology |
 |---|---|
 | Container Platform | Red Hat OKD 4.x (OpenShift upstream) |
-| Middleware Runtime | IBM WebSphere Liberty (Open Liberty base) |
-| Legacy Middleware | IBM WebSphere Application Server ND (simulated via Vagrant) |
+| Middleware Runtime | Open Liberty (WebSphere Liberty upstream) |
+| Legacy Middleware | IBM WAS ND (simulated via Vagrant — not licensed) |
 | Automation | Ansible 2.x |
-| CI/CD | GitHub Actions |
-| IaC | Terraform (cluster infra config) |
+| CI/CD | GitHub Actions + Tekton/OpenShift Pipelines |
+| GitOps | OpenShift GitOps (Argo CD) |
 | Containers | Docker / Podman |
-| Load Balancing | IBM HTTP Server (IHS) with WebSphere plugin |
-| Monitoring | Prometheus + Grafana (OKD built-in + custom dashboards) |
+| Load Balancing | Apache HTTPD (simulating IHS pattern with mod_proxy) |
+| Monitoring | Prometheus + Grafana (ServiceMonitor + custom dashboards) |
+| Session Clustering | Hazelcast JCache (embedded, Kubernetes discovery) |
 | SCM | Git / GitHub |
 | Scripting | Bash, Python (wsadmin Jython scripts) |
-| App | Sample Java EE app (Open Liberty getting-started or custom) |
-| AI Dev Assistant | Claude Code (Anthropic) |
+| App | Jakarta EE 10 / MicroProfile 6.1 (JAX-RS, mpHealth, mpMetrics) |
 
 ---
 
@@ -215,92 +122,113 @@ nexusliberty/
 ├── CLAUDE.md                          # This file — Claude Code project context
 ├── README.md                          # Project overview and architecture
 │
-├── cluster/                           # OKD cluster configuration
-│   ├── install-config.yaml            # OKD installer config
-│   ├── oauth/
-│   │   └── htpasswd-oauth.yaml        # OAuth identity provider config
-│   ├── operators/
-│   │   ├── websphere-liberty-operator.yaml
-│   │   ├── openshift-pipelines-subscription.yaml
-│   │   └── builds-for-openshift-subscription.yaml
-│   └── rbac/                          # OKD RBAC configs
-│
-├── ansible/                           # Ansible automation
-│   ├── inventory/
-│   │   ├── hosts.ini                  # WAS/IHS node inventory
-│   │   └── group_vars/
-│   ├── playbooks/
-│   │   ├── was-install.yml            # WAS ND install and config
-│   │   ├── was-cluster.yml            # WAS cluster creation
-│   │   ├── liberty-install.yml        # Liberty server provisioning
-│   │   ├── ihs-install.yml            # IBM HTTP Server + plugin
-│   │   └── was-deploy-app.yml         # Application deployment
-│   └── roles/
-│       ├── was-base/                  # WAS base configuration role
-│       ├── liberty-server/            # Liberty server role
-│       └── ihs-proxy/                 # IHS reverse proxy role
+├── app/                               # Jakarta EE application
+│   ├── pom.xml                        # Maven build (Open Liberty runtime)
+│   └── src/main/
+│       ├── java/io/devopsnexus/nexusapp/
+│       │   ├── NexusApplication.java  # JAX-RS application root
+│       │   ├── HealthResource.java    # /api/health endpoint
+│       │   ├── InfoResource.java      # /api/info endpoint
+│       │   ├── LivenessCheck.java     # MicroProfile liveness probe
+│       │   └── ReadinessCheck.java    # MicroProfile readiness probe
+│       └── webapp/index.html          # Landing page
 │
 ├── docker/                            # Container builds
 │   ├── liberty-app/
-│   │   ├── Dockerfile                 # Liberty container image
-│   │   └── server.xml                 # Liberty server configuration
+│   │   ├── Dockerfile                 # Multi-stage: Maven build → Open Liberty runtime
+│   │   ├── server.xml                 # Liberty server config (webProfile + microProfile + sessionCache)
+│   │   └── hazelcast-client.xml       # Hazelcast embedded member config (K8s discovery)
 │   └── ihs/
-│       └── Dockerfile                 # IHS container (if containerizing)
+│       ├── Dockerfile                 # Apache HTTPD 2.4 (IHS stand-in)
+│       └── httpd.conf                 # Reverse proxy + load balancing config
 │
-├── openshift/                         # OpenShift manifests
-│   ├── namespace/
+├── openshift/                         # OpenShift deployment manifests
 │   ├── liberty-deployment/
-│   │   ├── WebSphereLibertyApplication.yaml   # Liberty Operator CR
+│   │   ├── WebSphereLibertyApplication.yaml  # Liberty Operator CR
+│   │   ├── headless-service.yaml      # Hazelcast cluster discovery
+│   │   └── rbac.yaml                  # ServiceAccount + Hazelcast RBAC
+│   ├── ihs-deployment/
+│   │   ├── deployment.yaml            # IHS (Apache) load balancer
 │   │   ├── service.yaml
 │   │   └── route.yaml
-│   ├── configmaps/
-│   │   └── liberty-server-config.yaml
-│   ├── secrets/
-│   │   └── liberty-tls.yaml
-│   ├── pipelines/                                     # Tekton CI pipeline
-│   │   ├── 01-rbac.yaml                               # ServiceAccount + permissions
-│   │   ├── 02-pvc.yaml                                # Shared workspace PVC
-│   │   ├── 03-secrets.yaml                            # GHCR + Git credentials (template)
-│   │   ├── 04-task-git-update-manifest.yaml           # Custom task: commit image tag
-│   │   ├── 05-pipeline.yaml                           # Liberty build pipeline
-│   │   └── 06-pipelinerun-template.yaml               # PipelineRun template
-│   └── monitoring/
-│       ├── servicemonitor.yaml
-│       └── grafana-dashboard.yaml
+│   ├── monitoring/
+│   │   ├── servicemonitor.yaml        # Prometheus scraping for Liberty
+│   │   ├── prometheusrule.yaml        # Alert rules (pod down, high latency, errors)
+│   │   ├── grafana-dashboard.yaml     # JVM + request metrics dashboard
+│   │   └── cluster-monitoring-config.yaml  # Enable user workload monitoring
+│   └── pipelines/                     # Tekton CI pipeline
+│       ├── 01-rbac.yaml               # ServiceAccount + permissions
+│       ├── 02-pvc.yaml                # Shared workspace PVC
+│       ├── 03-secrets.yaml.example    # GHCR + Git credentials (template)
+│       ├── 04-task-git-update-manifest.yaml  # Custom task: commit image tag
+│       ├── 05-pipeline.yaml           # Liberty build pipeline
+│       └── 06-pipelinerun-template.yaml
 │
-├── terraform/                         # Infrastructure as code
-│   ├── okd-dns/                       # DNS config for cluster
-│   └── registry/                      # Container registry config
+├── cluster/                           # OKD cluster-level configuration
+│   ├── namespace/
+│   │   └── liberty-apps.yaml
+│   ├── operators/
+│   │   ├── websphere-liberty-operator.yaml
+│   │   ├── ibm-operator-catalog.yaml
+│   │   ├── openshift-pipelines-subscription.yaml
+│   │   └── builds-for-openshift-subscription.yaml
+│   ├── gitops/
+│   │   ├── argocd-nexusliberty-app.yaml    # Argo CD Application CR
+│   │   ├── argocd-rbac.yaml                # Argo CD RBAC for Liberty CRDs
+│   │   └── openshift-gitops-subscription.yaml
+│   └── oauth/
+│       └── htpasswd-oauth.yaml
 │
-├── app/                               # Sample Java EE application
-│   ├── src/
-│   ├── pom.xml
-│   └── README.md
+├── ansible/                           # Ansible automation (WAS ND simulation)
+│   ├── ansible.cfg
+│   ├── inventory/
+│   │   ├── hosts.ini                  # WAS/IHS node inventory
+│   │   └── group_vars/
+│   │       ├── all.yml                # Shared variables
+│   │       ├── dmgr.yml               # Deployment Manager vars
+│   │       ├── was_nodes.yml          # Managed node vars
+│   │       └── ihs.yml               # IHS vars
+│   ├── playbooks/
+│   │   ├── was-install.yml            # WAS ND base install
+│   │   ├── was-cluster.yml            # WAS cluster creation
+│   │   ├── ihs-install.yml            # IHS + WebSphere plugin
+│   │   └── was-deploy-app.yml         # Application deployment
+│   └── roles/
+│       ├── was-base/                  # OS prereqs, Java, WAS product simulation
+│       ├── was-dmgr/                  # Deployment Manager profile
+│       ├── was-nodeagent/             # Node agent + app server profiles
+│       ├── was-cluster/               # Cluster creation + resources
+│       ├── was-deploy/                # App deployment + health check
+│       └── ihs-proxy/                 # IHS reverse proxy (supports liberty_mode toggle)
 │
-├── scripts/                           # Utility scripts
-│   ├── wsadmin/                       # wsadmin Jython scripts
-│   │   ├── create-cluster.py
-│   │   ├── deploy-app.py
-│   │   └── health-check.py
-│   └── bash/
-│       ├── was-status.sh
-│       └── liberty-logs.sh
+├── scripts/wsadmin/                   # wsadmin Jython scripts (simulation)
+│   ├── create-cluster.py             # WAS cluster creation
+│   ├── deploy-app.py                 # Application deployment
+│   └── health-check.py              # Cell health verification
 │
-├── vagrant/                           # WAS on-prem simulation
-│   ├── Vagrantfile                    # WAS ND node definitions
+├── vagrant/                           # WAS on-prem simulation environment
+│   ├── Vagrantfile                    # 4-node topology: dmgr, was1, was2, ihs
 │   └── provision/
+│       ├── bootstrap.sh               # Common OS setup for all nodes
+│       ├── setup-dmgr.sh             # Deployment Manager provisioning
+│       ├── setup-was1.sh             # Managed node 1
+│       ├── setup-was2.sh             # Managed node 2
+│       └── setup-ihs.sh             # IHS provisioning
 │
-├── docs/                              # Documentation
-│   ├── architecture.md
-│   ├── was-runbook.md                 # WAS operational runbook
-│   ├── liberty-migration-guide.md     # WAS → Liberty migration guide
-│   └── openshift-operations.md        # OKD day-2 operations
+├── docs/                              # Phase walkthrough guides
+│   ├── phase1-liberty-operator-install.md
+│   ├── phase2-liberty-containerization.md
+│   ├── phase3-ansible-was-automation.md
+│   ├── phase4-cicd-argocd.md
+│   ├── phase5-ha-operations.md
+│   ├── was-runbook.md                 # WAS operational procedures
+│   ├── prerequisites.md               # Environment setup prerequisites
+│   └── project-review-findings.md     # Architecture review findings
 │
-└── .github/
-    └── workflows/
-        ├── liberty-build.yml          # Build Liberty container image
-        ├── liberty-deploy-okd.yml     # Deploy to OKD cluster
-        └── ansible-lint.yml           # Ansible linting
+└── .github/workflows/
+    ├── liberty-build.yml              # Build Liberty image, update manifest, push to GHCR
+    ├── ihs-build.yml                  # Build IHS image, push to GHCR
+    └── ansible-lint.yml               # Ansible linting on PR + push
 ```
 
 ---
@@ -331,7 +259,7 @@ nexusliberty/
 - [x] wsadmin Jython scripts for common admin tasks
 
 ### Phase 4 — CI/CD Pipeline ✅
-- [x] GitHub Actions: pre-merge quality gates (Maven build, unit tests, Dockerfile lint)
+- [x] GitHub Actions: pre-merge quality gates (Maven build, Dockerfile lint)
 - [x] GitHub Actions: Ansible lint on playbook changes
 - [x] Tekton/OpenShift Pipelines: on-cluster container build, push to GHCR, manifest update
 - [x] OpenShift GitOps (Argo CD): deploy to OKD via GitOps sync
@@ -339,7 +267,7 @@ nexusliberty/
 - [x] README badges (build status, Ansible lint status)
 
 ### Phase 5 — HA and Operations ✅
-- [x] Liberty clustering config (session replication)
+- [x] Liberty clustering config (Hazelcast JCache session replication)
 - [x] IHS load balancing across Liberty instances
 - [x] Prometheus metrics from Liberty via mpMetrics feature
 - [x] Grafana dashboard for Liberty JVM/request metrics
@@ -366,233 +294,34 @@ oc logs -f deployment/liberty-app -n liberty-apps
 
 # Debug
 oc describe pod <pod-name> -n liberty-apps
-oc adm must-gather                          # Full cluster diagnostic dump
-
-# SCCs (Security Context Constraints — OpenShift specific)
-oc get scc
-oc adm policy add-scc-to-serviceaccount anyuid -z default -n liberty-apps
+oc adm must-gather
 ```
 
-### Ansible
+### Ansible (run from ansible/ directory)
 ```bash
-# Dry run
-ansible-playbook -i inventory/hosts.ini playbooks/was-install.yml --check
-
-# Run playbook
-ansible-playbook -i inventory/hosts.ini playbooks/was-install.yml
-
-# Run specific tags
-ansible-playbook -i inventory/hosts.ini playbooks/was-cluster.yml --tags "cluster-create"
-
-# Lint
+ansible-playbook -i inventory/hosts.ini playbooks/was-install.yml --check   # dry run
+ansible-playbook -i inventory/hosts.ini playbooks/was-install.yml           # execute
 ansible-lint playbooks/
 ```
 
-### wsadmin (Jython)
-```bash
-# Connect to Deployment Manager
-wsadmin.sh -lang jython -host <dmgr-host> -port 8879 \
-  -user wasadmin -password <pass>
-
-# Run script
-wsadmin.sh -lang jython -f scripts/wsadmin/deploy-app.py \
-  -host <dmgr-host> -port 8879
-```
-
-### Liberty (local/Vagrant)
-```bash
-# Start Liberty server
-/opt/ibm/wlp/bin/server start defaultServer
-
-# Status
-/opt/ibm/wlp/bin/server status defaultServer
-
-# Logs
-tail -f /opt/ibm/wlp/usr/servers/defaultServer/logs/messages.log
-```
-
-### Docker / Container
-```bash
-# Build Liberty image
-docker build -t nexusliberty-app:latest ./docker/liberty-app/
-
-# Test locally
-docker run -p 9080:9080 -p 9443:9443 nexusliberty-app:latest
-
-# Push to GHCR
-docker tag nexusliberty-app:latest ghcr.io/<your-username>/nexusliberty-app:latest
-docker push ghcr.io/<your-username>/nexusliberty-app:latest
-```
-
 ---
 
-## Liberty server.xml Baseline
+## Key Configuration Files
 
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<server description="NexusLiberty App Server">
+Rather than embedding stale copies, refer to the actual files:
 
-    <!-- Enable features -->
-    <featureManager>
-        <feature>servlet-5.0</feature>
-        <feature>jndi-1.0</feature>
-        <feature>jdbc-4.2</feature>
-        <feature>ssl-1.0</feature>
-        <feature>mpHealth-3.1</feature>
-        <feature>mpMetrics-4.0</feature>
-        <feature>mpConfig-3.0</feature>
-    </featureManager>
-
-    <!-- HTTP endpoints -->
-    <httpEndpoint id="defaultHttpEndpoint"
-                  host="*"
-                  httpPort="9080"
-                  httpsPort="9443"/>
-
-    <!-- TLS config -->
-    <keyStore id="defaultKeyStore" password="${env.KEYSTORE_PASSWORD}"/>
-
-    <!-- Health checks (for OKD liveness/readiness probes) -->
-    <mpHealth/>
-
-    <!-- Metrics (for Prometheus scraping) -->
-    <mpMetrics authentication="false"/>
-
-    <!-- Application -->
-    <webApplication id="nexus-app"
-                    location="nexus-app.war"
-                    contextRoot="/app"/>
-
-</server>
-```
-
----
-
-## OpenShift Liberty Operator CR Example
-
-```yaml
-apiVersion: liberty.websphere.ibm.com/v1
-kind: WebSphereLibertyApplication
-metadata:
-  name: nexusliberty-app
-  namespace: liberty-apps
-spec:
-  applicationImage: ghcr.io/<your-username>/nexusliberty-app:latest
-  replicas: 2
-  expose: true
-  service:
-    port: 9443
-  readinessProbe:
-    httpGet:
-      path: /health/ready
-      port: 9443
-      scheme: HTTPS
-    initialDelaySeconds: 30
-    periodSeconds: 10
-  livenessProbe:
-    httpGet:
-      path: /health/live
-      port: 9443
-      scheme: HTTPS
-    initialDelaySeconds: 60
-    periodSeconds: 30
-  env:
-    - name: WLP_LOGGING_CONSOLE_FORMAT
-      value: json
-    - name: WLP_LOGGING_CONSOLE_LOGLEVEL
-      value: info
-```
-
----
-
-## GitHub Actions Pipeline Baseline
-
-```yaml
-# .github/workflows/liberty-deploy-okd.yml
-name: Build and Deploy Liberty to OKD
-
-on:
-  push:
-    branches: [main]
-    paths:
-      - 'docker/liberty-app/**'
-      - 'app/**'
-
-jobs:
-  build-and-push:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Log in to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build and push Liberty image
-        uses: docker/build-push-action@v5
-        with:
-          context: ./docker/liberty-app
-          push: true
-          tags: ghcr.io/${{ github.repository_owner }}/nexusliberty-app:${{ github.sha }}
-
-  deploy-to-okd:
-    needs: build-and-push
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install oc CLI
-        uses: redhat-actions/openshift-tools-installer@v1
-        with:
-          oc: latest
-
-      - name: Login to OKD
-        uses: redhat-actions/oc-login@v1
-        with:
-          openshift_server_url: ${{ secrets.OKD_SERVER_URL }}
-          openshift_token: ${{ secrets.OKD_TOKEN }}
-
-      - name: Update image and deploy
-        run: |
-          oc set image deployment/nexusliberty-app \
-            nexusliberty-app=ghcr.io/${{ github.repository_owner }}/nexusliberty-app:${{ github.sha }} \
-            -n liberty-apps
-          oc rollout status deployment/nexusliberty-app -n liberty-apps
-```
-
----
-
-## WAS Cell Topology (Simulated via Vagrant)
-
-```
-┌─────────────────────────────────────────────┐
-│              WAS ND Cell                    │
-│           nexusliberty-cell                 │
-│                                             │
-│  ┌──────────────────────────────────────┐   │
-│  │  Deployment Manager (dmgr)           │   │
-│  │  nexus-dmgr.<domain>                 │   │
-│  │  Admin Console: :9060                │   │
-│  │  SOAP Port: :8879                    │   │
-│  └──────────────────────────────────────┘   │
-│                                             │
-│  ┌────────────────┐  ┌────────────────┐     │
-│  │  Managed Node 1│  │  Managed Node 2│     │
-│  │  nexus-was1    │  │  nexus-was2    │     │
-│  │  AppServer1    │  │  AppServer2    │     │
-│  │  :9080/:9443   │  │  :9080/:9443   │     │
-│  └────────────────┘  └────────────────┘     │
-│                                             │
-│  ┌──────────────────────────────────────┐   │
-│  │  IBM HTTP Server (IHS)               │   │
-│  │  nexus-ihs.<domain>                  │   │
-│  │  :80/:443  → WAS cluster             │   │
-│  └──────────────────────────────────────┘   │
-└─────────────────────────────────────────────┘
-```
+| Purpose | File |
+|---|---|
+| Liberty server config | `docker/liberty-app/server.xml` |
+| Hazelcast session clustering | `docker/liberty-app/hazelcast-client.xml` |
+| Liberty Operator CR | `openshift/liberty-deployment/WebSphereLibertyApplication.yaml` |
+| IHS load balancer config | `docker/ihs/httpd.conf` |
+| Prometheus monitoring | `openshift/monitoring/servicemonitor.yaml` |
+| Alert rules | `openshift/monitoring/prometheusrule.yaml` |
+| Grafana dashboard | `openshift/monitoring/grafana-dashboard.yaml` |
+| Argo CD Application | `cluster/gitops/argocd-nexusliberty-app.yaml` |
+| Tekton pipeline | `openshift/pipelines/05-pipeline.yaml` |
+| CI build workflow | `.github/workflows/liberty-build.yml` |
 
 ---
 
@@ -616,32 +345,6 @@ oc adm policy add-scc-to-serviceaccount restricted-v2 \
 
 ---
 
-## About This CLAUDE.md
-
-This file is the primary context document for [Claude Code](https://claude.ai/code)
-AI-assisted development sessions. It provides:
-
-- Full project architecture and technology decisions
-- Infrastructure topology and IP allocation
-- Phase-by-phase implementation plan with checkboxes
-- Command reference for all tools in the stack
-- Baseline configuration examples (server.xml, CR manifests, GitHub Actions)
-- Operational runbook notes
-
-Every Claude Code session in this repo starts by reading this file, giving the AI
-assistant complete context without re-explaining the project from scratch. This
-pattern significantly accelerates development velocity and keeps sessions focused.
-
----
-
-## Infrastructure / Terraform
-
-When working with Terraform, always run `terraform validate` before `terraform apply`.
-After failed applies, diagnose the specific error before attempting fixes — do not
-retry apply in a loop.
-
----
-
 ## Git Workflow
 
 Always create a feature branch before committing changes. Never commit directly to main.
@@ -655,31 +358,32 @@ When debugging deployment issues, verify the actual deployed environment URLs an
 endpoints rather than assuming localhost or default paths. Always confirm the deployment
 target (cloud vs local) before suggesting URLs.
 
----
-
-## Primary Languages and Tools
-
-Primary languages and tools for this workspace: YAML (Ansible playbooks, Kubernetes/OpenShift
-manifests, Terraform HCL), Python (wsadmin Jython scripts), Shell scripts (Bash), Java
-(Liberty app), and Dockerfiles. When generating code, prefer these unless otherwise specified.
-
----
-
-## Agent Behavior
-
-When a task is complete, stop. Do not continue looping or polling for additional work.
-If running as a worker/agent, write the done signal file once and exit cleanly.
+When debugging Kubernetes/OpenShift issues, check the API version compatibility first
+(e.g., v1 vs v1beta1) and trace the full request path (client → router → service → pod)
+before suggesting fixes.
 
 ---
 
 ## Notes for Claude Code Sessions
 
+### Project-specific gotchas
 - Always check `oc get clusteroperators` before assuming cluster is healthy
 - Liberty Operator CRDs may take 5-10 min to register after install
 - OKD image pulls may be slow first time — use `oc get events -n liberty-apps` to monitor
 - IHS plugin configuration requires matching WAS version — check fix pack levels
 - When writing wsadmin scripts, use Jython (not Jacl) — industry standard now
 - Vagrant WAS simulation is for config/automation demo only — not a licensed WAS install
-- Use Open Liberty (open-source upstream) for container builds — functionally equivalent
-  to WebSphere Liberty, no license required for portfolio work
-- Update IP addresses and domain names in this file to match your actual environment
+- Use Open Liberty (open-source upstream) for container builds — no license required
+- The IHS container is Apache HTTPD (not actual IBM IHS) — simulates the IHS pattern
+- Hazelcast discovery requires the headless service and RBAC in `openshift/liberty-deployment/`
+
+### Environment details
+- Real infrastructure values (IPs, hostnames, domains) are in `CLAUDE.private.md` (local only, never commit)
+- Target namespace for Liberty workloads: `liberty-apps`
+- GHCR image base: `ghcr.io/jconover/nexusliberty-app`
+- Argo CD watches `openshift/liberty-deployment/` for GitOps sync
+- CI workflow updates image tag in `WebSphereLibertyApplication.yaml` via sed + commit to main
+
+### Languages and tools
+Primary: YAML (Ansible playbooks, K8s/OpenShift manifests), Python (wsadmin Jython),
+Shell (Bash), Java (Liberty app), Dockerfiles. Prefer these unless otherwise specified.
