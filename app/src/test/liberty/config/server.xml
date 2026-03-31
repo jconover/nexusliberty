@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Test server config — no Hazelcast/sessionCache to keep IT lightweight -->
+<server description="NexusLiberty Test Server">
+
+    <featureManager>
+        <feature>webProfile-10.0</feature>
+        <feature>microProfile-6.1</feature>
+    </featureManager>
+
+    <httpEndpoint id="defaultHttpEndpoint"
+                  host="*"
+                  httpPort="${default.http.port}"
+                  httpsPort="${default.https.port}"/>
+
+    <keyStore id="defaultKeyStore"
+              password="liberty"/>
+
+    <mpHealth/>
+    <mpMetrics authentication="false"/>
+
+    <webApplication id="nexus-app"
+                    location="nexus-app.war"
+                    contextRoot="/app"/>
+
+    <logging consoleFormat="simple"
+             consoleLogLevel="INFO"/>
+
+</server>

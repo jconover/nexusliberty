@@ -343,3 +343,13 @@ python3 scripts/wsadmin/health-check.py
 **Running on WSL2?**
 - VirtualBox VMs may need Hyper-V disabled or use WSL2-compatible VirtualBox 7+
 - Alternative: run Vagrant on the Windows host and Ansible from WSL2 targeting the VMs
+
+## What's Next (Phase 4)
+
+With the legacy WAS ND environment automated, Phase 4 builds the CI/CD pipeline:
+- GitHub Actions for pre-merge quality gates (Maven build, Dockerfile lint, Ansible lint)
+- Tekton/OpenShift Pipelines for on-cluster container builds
+- Argo CD for GitOps deployment to OKD
+- End-to-end flow from code push to production deployment
+
+Next: [Phase 4 — CI/CD Pipeline](phase4-cicd-argocd.md)

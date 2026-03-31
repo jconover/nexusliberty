@@ -240,3 +240,11 @@ oc get prometheusrule nexusliberty-alerts -n liberty-apps
 | `openshift/monitoring/prometheusrule.yaml` | Alert rules (heap, errors, availability, latency) |
 | `openshift/monitoring/grafana-dashboard.yaml` | Grafana dashboard JSON |
 | `docs/was-runbook.md` | WAS + Liberty operational runbook |
+
+## What's Next
+
+All five phases are complete. The NexusLiberty platform now demonstrates the full enterprise middleware modernization lifecycle: from legacy WAS ND automation through containerized Liberty on OpenShift with CI/CD, high availability, and observability.
+
+For operational procedures, see the [WAS Operational Runbook](was-runbook.md).
+
+Back to the [project README](../README.md) for the full project overview.
