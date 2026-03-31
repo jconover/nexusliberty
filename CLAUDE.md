@@ -634,6 +634,44 @@ pattern significantly accelerates development velocity and keeps sessions focuse
 
 ---
 
+## Infrastructure / Terraform
+
+When working with Terraform, always run `terraform validate` before `terraform apply`.
+After failed applies, diagnose the specific error before attempting fixes — do not
+retry apply in a loop.
+
+---
+
+## Git Workflow
+
+Always create a feature branch before committing changes. Never commit directly to main.
+Use the pattern: create branch → commit → push → create PR → merge.
+
+---
+
+## Debugging
+
+When debugging deployment issues, verify the actual deployed environment URLs and
+endpoints rather than assuming localhost or default paths. Always confirm the deployment
+target (cloud vs local) before suggesting URLs.
+
+---
+
+## Primary Languages and Tools
+
+Primary languages and tools for this workspace: YAML (Ansible playbooks, Kubernetes/OpenShift
+manifests, Terraform HCL), Python (wsadmin Jython scripts), Shell scripts (Bash), Java
+(Liberty app), and Dockerfiles. When generating code, prefer these unless otherwise specified.
+
+---
+
+## Agent Behavior
+
+When a task is complete, stop. Do not continue looping or polling for additional work.
+If running as a worker/agent, write the done signal file once and exit cleanly.
+
+---
+
 ## Notes for Claude Code Sessions
 
 - Always check `oc get clusteroperators` before assuming cluster is healthy
