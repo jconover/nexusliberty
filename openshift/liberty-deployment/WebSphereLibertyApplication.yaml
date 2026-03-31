@@ -12,7 +12,7 @@ spec:
   license:
     accept: true
     edition: IBM WebSphere Application Server
-  applicationImage: ghcr.io/jconover/nexusliberty-app:latest
+  applicationImage: ghcr.io/jconover/nexusliberty-app:sha-fc4b1e3e59a7c46083bf0578eadbfaf61704d680
   replicas: 2
   serviceAccountName: nexusliberty-sa
   expose: true
