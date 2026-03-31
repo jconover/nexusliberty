@@ -185,8 +185,9 @@ oc apply -f openshift/pipelines/05-pipeline.yaml
 # Verify
 oc get pipeline liberty-build-pipeline -n liberty-apps
 
-# Check available ClusterTasks (provided by OpenShift Pipelines operator)
-oc get clustertask | grep -E 'git-clone|maven|buildah'
+# Check available Tasks (provided by OpenShift Pipelines operator in openshift-pipelines namespace)
+# Note: ClusterTasks were removed in Pipelines v1.21+; tasks are now namespace-scoped
+oc get task -n openshift-pipelines | grep -E 'git-clone|maven|buildah'
 ```
 
 ## Step 5 — Apply Argo CD RBAC and Application

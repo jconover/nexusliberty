@@ -11,7 +11,7 @@ metadata:
 spec:
   license:
     accept: true
-    edition: Open
+    edition: IBM WebSphere Application Server
   applicationImage: ghcr.io/jconover/nexusliberty-app:latest
   replicas: 2
   serviceAccountName: nexusliberty-sa
