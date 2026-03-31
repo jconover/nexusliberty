@@ -33,8 +33,14 @@ spec:
     # Step 1: Clone the repository
     - name: git-clone
       taskRef:
-        kind: ClusterTask
-        name: git-clone
+        resolver: cluster
+        params:
+          - name: kind
+            value: task
+          - name: name
+            value: git-clone
+          - name: namespace
+            value: openshift-pipelines
       params:
         - name: url
           value: $(params.git-url)
@@ -51,8 +57,14 @@ spec:
     # Step 2: Build the Java app with Maven
     - name: maven-build
       taskRef:
-        kind: ClusterTask
-        name: maven
+        resolver: cluster
+        params:
+          - name: kind
+            value: task
+          - name: name
+            value: maven
+          - name: namespace
+            value: openshift-pipelines
       runAfter:
         - git-clone
       params:
@@ -74,8 +86,14 @@ spec:
     # Step 3: Build and push the container image with buildah
     - name: buildah-build-push
       taskRef:
-        kind: ClusterTask
-        name: buildah
+        resolver: cluster
+        params:
+          - name: kind
+            value: task
+          - name: name
+            value: buildah
+          - name: namespace
+            value: openshift-pipelines
       runAfter:
         - maven-build
       params:
