@@ -2,7 +2,7 @@
 # Stage 1 — Maven build
 # Build context: repo root (docker build -f docker/liberty-app/Dockerfile .)
 # =============================================================================
-FROM maven:3.9-eclipse-temurin-17 AS build
+FROM docker.io/library/maven:3.9-eclipse-temurin-17 AS build
 
 WORKDIR /build
 
