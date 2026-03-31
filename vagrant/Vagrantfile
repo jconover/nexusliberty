@@ -87,6 +87,6 @@ Vagrant.configure("2") do |config|
           "NODE_NAME"   => "#{node[:name]}Node",
           "DOMAIN"      => DOMAIN,
         }
-    end
-  end
-end
+    end                                   # config.vm.define
+  end                                     # NODES.each
+end                                       # Vagrant.configure

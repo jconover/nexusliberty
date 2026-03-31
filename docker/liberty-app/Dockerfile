@@ -14,7 +14,7 @@ RUN mvn dependency:go-offline -B
 
 # Copy source and build
 COPY app/src ./src
-RUN mvn clean package -DskipTests -B
+RUN mvn clean package -B
 
 # =============================================================================
 # Stage 2 — Open Liberty runtime
