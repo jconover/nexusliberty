@@ -21,6 +21,7 @@
       -password {{ was_admin_password }}
   become: true
   become_user: "{{ was_user }}"
+  no_log: true
   environment:
     CELL_NAME: "{{ cell_name }}"
     CLUSTER_NAME: "{{ cluster_name }}"

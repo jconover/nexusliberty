@@ -1,0 +1,17 @@
+---
+# PodDisruptionBudget — ensures at least one Liberty pod remains
+# available during voluntary disruptions (node drain, upgrades).
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: nexusliberty-app-pdb
+  namespace: liberty-apps
+  labels:
+    app.kubernetes.io/name: nexusliberty-app
+    app.kubernetes.io/part-of: nexusliberty
+    app.kubernetes.io/component: backend
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: nexusliberty-app

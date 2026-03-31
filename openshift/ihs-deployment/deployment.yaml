@@ -8,6 +8,7 @@ metadata:
   namespace: liberty-apps
   labels:
     app.kubernetes.io/name: nexusliberty-ihs
+    app.kubernetes.io/version: "1.0.0"
     app.kubernetes.io/part-of: nexusliberty
     app.kubernetes.io/component: load-balancer
 spec:

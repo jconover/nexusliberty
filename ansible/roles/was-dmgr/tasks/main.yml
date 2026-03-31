@@ -29,6 +29,7 @@
     owner: "{{ was_user }}"
     group: "{{ was_group }}"
     mode: "0644"
+  notify: Restart dmgr
 
 - name: Deploy Dmgr serverindex.xml
   ansible.builtin.template:
@@ -37,6 +38,7 @@
     owner: "{{ was_user }}"
     group: "{{ was_group }}"
     mode: "0644"
+  notify: Restart dmgr
 
 - name: Deploy Dmgr security.xml
   ansible.builtin.template:
@@ -45,6 +47,7 @@
     owner: "{{ was_user }}"
     group: "{{ was_group }}"
     mode: "0640"
+  notify: Restart dmgr
 
 - name: Deploy Dmgr control scripts
   ansible.builtin.template:

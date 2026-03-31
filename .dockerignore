@@ -10,3 +10,5 @@ cluster/
 .omc/
 node_modules/
 *.md
+.env*
+*.log

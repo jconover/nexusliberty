@@ -3,6 +3,11 @@ kind: WebSphereLibertyApplication
 metadata:
   name: nexusliberty-app
   namespace: liberty-apps
+  labels:
+    app.kubernetes.io/name: nexusliberty-app
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/part-of: nexusliberty
+    app.kubernetes.io/component: backend
 spec:
   license:
     accept: true
@@ -15,6 +20,15 @@ spec:
     termination: edge
   service:
     port: 9080
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            labelSelector:
+              matchLabels:
+                app.kubernetes.io/name: nexusliberty-app
+            topologyKey: kubernetes.io/hostname
   resources:
     requests:
       cpu: 200m
@@ -34,6 +48,12 @@ spec:
       port: 9080
     initialDelaySeconds: 60
     periodSeconds: 30
+  startupProbe:
+    httpGet:
+      path: /health/live
+      port: 9080
+    failureThreshold: 30
+    periodSeconds: 10
   env:
     - name: WLP_LOGGING_CONSOLE_FORMAT
       value: json

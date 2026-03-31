@@ -7,5 +7,5 @@ was_node_name: nexus-dmgrNode
 was_server_name: dmgr
 
 # Dmgr-specific ports
-was_bootstrap_port: 9809
-was_dcs_unicast_port: 7277
+dmgr_bootstrap_port: 9809
+dmgr_dcs_unicast_port: 7277

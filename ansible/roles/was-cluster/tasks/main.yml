@@ -30,6 +30,7 @@
     owner: "{{ was_user }}"
     group: "{{ was_group }}"
     mode: "0644"
+  notify: Sync cluster config
 
 - name: Create cluster member state tracking
   ansible.builtin.template:

@@ -72,7 +72,7 @@
 
     <httpSessionCache cacheManagerRef="HazelcastCacheManager"/>
     <cacheManager id="HazelcastCacheManager"
-                  uri="file:${server.config.dir}/hazelcast-client.xml">
+                  uri="file:${server.config.dir}/hazelcast.xml">
         <library libraryRef="hazelcastLib"/>
     </cacheManager>
 

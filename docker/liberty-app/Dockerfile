@@ -25,7 +25,7 @@ FROM icr.io/appcafe/open-liberty:kernel-slim-java17-openj9-ubi AS runtime
 COPY --chown=1001:0 docker/liberty-app/server.xml /config/server.xml
 
 # Copy Hazelcast session cache config
-COPY --chown=1001:0 docker/liberty-app/hazelcast-client.xml /config/hazelcast-client.xml
+COPY --chown=1001:0 docker/liberty-app/hazelcast.xml /config/hazelcast.xml
 
 # Install only the Liberty features declared in server.xml
 RUN features.sh
@@ -45,4 +45,7 @@ COPY --chown=1001:0 --from=build /build/target/nexus-app.war /config/apps/nexus-
 RUN configure.sh
 
 # Open Liberty runs as non-root by default (uid 1001 / group root)
+HEALTHCHECK --interval=30s --timeout=5s --start-period=90s --retries=3 \
+    CMD curl -f http://localhost:9080/health/ready || exit 1
+
 EXPOSE 9080 9443

@@ -38,6 +38,7 @@
     owner: "{{ was_user }}"
     group: "{{ was_group }}"
     mode: "0644"
+  notify: Restart appserver
 
 - name: Deploy serverindex.xml
   ansible.builtin.template:
@@ -46,6 +47,7 @@
     owner: "{{ was_user }}"
     group: "{{ was_group }}"
     mode: "0644"
+  notify: Restart nodeagent
 
 - name: Deploy node agent and server control scripts
   ansible.builtin.template:

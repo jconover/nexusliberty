@@ -75,6 +75,7 @@
       -password {{ was_admin_password }}
   become: true
   become_user: "{{ was_user }}"
+  no_log: true
   environment:
     CELL_NAME: "{{ cell_name }}"
     CLUSTER_NAME: "{{ cluster_name }}"
@@ -96,6 +97,7 @@
     group: "{{ was_group }}"
     mode: "0644"
     remote_src: true
+  notify: Restart cluster
 
 - name: Include health check tasks
   ansible.builtin.include_tasks: health-check.yml
