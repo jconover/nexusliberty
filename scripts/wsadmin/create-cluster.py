@@ -117,8 +117,12 @@ def main():
 
     for step_name, step_func in steps:
         print("\n--- %s ---" % step_name)
-        if not step_func():
-            print("WSAD9001E: Step failed: %s" % step_name)
+        try:
+            if not step_func():
+                print("WSAD9001E: Step failed: %s" % step_name)
+                sys.exit(1)
+        except Exception as e:
+            print("WSAD9002E: Exception in step '%s': %s" % (step_name, e))
             sys.exit(1)
 
     print("\n" + "=" * 60)

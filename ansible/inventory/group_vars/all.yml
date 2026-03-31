@@ -14,6 +14,8 @@ plugin_home: /opt/IBM/WebSphere/Plugins
 im_home: /opt/IBM/InstallationManager
 
 # --- WAS Cell topology ---
+was_dmgr_profile_name: Dmgr01
+dmgr_profile_path: "{{ was_home }}/profiles/{{ was_dmgr_profile_name }}"
 cell_name: nexusliberty-cell
 dmgr_host: nexus-dmgr.nexuslab.local
 dmgr_soap_port: 8879

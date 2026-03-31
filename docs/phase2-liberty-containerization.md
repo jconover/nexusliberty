@@ -279,9 +279,11 @@ oc rollout status deployment/nexusliberty-app -n liberty-apps
 | Multi-stage build | Build tools stay out of the runtime image; smaller attack surface |
 | Resource limits (200m-500m CPU, 256-512Mi RAM) | Sized for 3-node homelab with 32GB per node |
 
-## Cleanup (cloud users only)
+## Cleanup (Cloud and Homelab)
 
-If you're running on a paid cloud platform (ROSA, ARO, OSD) and want to avoid resource costs, tear down the deployment when not in use. On a homelab cluster, leave it running — there's no cost and it's useful for demos and building Phase 3.
+**Cloud users (ROSA, ARO, OSD):** Tear down the deployment when not in use to avoid resource costs.
+
+**Homelab users:** You can leave it running — there's no cloud cost. However, if you need to free resources for other workloads, delete and re-apply when ready.
 
 ```bash
 oc delete -f openshift/liberty-deployment/WebSphereLibertyApplication.yaml

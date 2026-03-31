@@ -21,14 +21,14 @@
   pre_tasks:
     - name: Validate Dmgr profile exists
       ansible.builtin.stat:
-        path: "{{ was_home }}/profiles/Dmgr01/config/cells/{{ cell_name }}/cell.xml"
+        path: "{{ dmgr_profile_path }}/config/cells/{{ cell_name }}/cell.xml"
       register: dmgr_check
       failed_when: not dmgr_check.stat.exists
       tags: [always]
 
     - name: Validate cluster exists
       ansible.builtin.stat:
-        path: "{{ was_home }}/profiles/Dmgr01/config/cells/{{ cell_name }}/clusters/{{ cluster_name }}/cluster.xml"
+        path: "{{ dmgr_profile_path }}/config/cells/{{ cell_name }}/clusters/{{ cluster_name }}/cluster.xml"
       register: cluster_check
       failed_when: not cluster_check.stat.exists
       tags: [always]
@@ -49,7 +49,7 @@
   post_tasks:
     - name: Verify WAR in installedApps
       ansible.builtin.stat:
-        path: "{{ was_home }}/profiles/Dmgr01/installedApps/{{ cell_name }}/{{ app_war }}"
+        path: "{{ dmgr_profile_path }}/installedApps/{{ cell_name }}/{{ app_war }}"
       register: app_check
       tags: [verify]
 

@@ -305,6 +305,10 @@ After the workflows run, check badges at `https://github.com/jconover/nexusliber
 - Your cluster is behind NAT — GHA needs a route to `api.nexuslab.nexuslab.local:6443`
 - Options: Cloudflare Tunnel, port forwarding on router, or self-hosted runner on your network
 
+**GitHub Actions re-triggers itself after Tekton commits**
+- The `git-update-manifest` task commits an updated image tag back to `main`. If your GitHub Actions workflow triggers on pushes to `main` without path filtering, this creates an infinite loop.
+- Fix: ensure `liberty-build.yml` uses path filters (`paths: ['app/**', 'docker/liberty-app/**']`) so the manifest-only commit from Tekton does not re-trigger the workflow.
+
 **ArgoCD shows OutOfSync after Tekton commits**
 - ArgoCD polls every 3 minutes by default — wait or force sync in the UI
 - Check Argo CD can reach the repo: Settings → Repositories in Argo CD UI
