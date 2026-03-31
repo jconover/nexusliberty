@@ -9,8 +9,10 @@ FROM httpd:2.4-alpine
 RUN rm -f /usr/local/apache2/conf/httpd.conf
 COPY docker/ihs/httpd.conf /usr/local/apache2/conf/httpd.conf
 
-# Non-root: listen on 8080 instead of 80
-RUN sed -i 's/^#LoadModule rewrite_module/LoadModule rewrite_module/' \
-    /usr/local/apache2/conf/httpd.conf || true
+# Ensure non-root user can write logs and pid file
+RUN chown -R 1001:0 /usr/local/apache2/logs && \
+    chmod -R g=u /usr/local/apache2/logs
 
 EXPOSE 8080
+
+USER 1001
