@@ -42,11 +42,11 @@ spec:
           - name: namespace
             value: openshift-pipelines
       params:
-        - name: url
+        - name: URL
           value: $(params.git-url)
-        - name: revision
+        - name: REVISION
           value: $(params.git-revision)
-        - name: deleteExisting
+        - name: DELETE_EXISTING
           value: "true"
       workspaces:
         - name: output
@@ -75,12 +75,10 @@ spec:
             - clean
             - package
             - -DskipTests
-        - name: MAVEN_IMAGE
-          value: maven:3.9-eclipse-temurin-21
       workspaces:
         - name: source
           workspace: shared-workspace
-        - name: maven-settings
+        - name: maven_settings
           workspace: shared-workspace
 
     # Step 3: Build and push the container image with buildah
@@ -98,12 +96,12 @@ spec:
         - maven-build
       params:
         - name: IMAGE
-          value: $(params.image-name):sha-$(tasks.git-clone.results.commit)
+          value: $(params.image-name):sha-$(tasks.git-clone.results.COMMIT)
         - name: DOCKERFILE
           value: docker/liberty-app/Dockerfile
         - name: CONTEXT
           value: .
-        - name: TLSVERIFY
+        - name: TLS_VERIFY
           value: "true"
       workspaces:
         - name: source
@@ -120,7 +118,7 @@ spec:
         - buildah-build-push
       params:
         - name: image-tag
-          value: sha-$(tasks.git-clone.results.commit)
+          value: sha-$(tasks.git-clone.results.COMMIT)
       workspaces:
         - name: source
           workspace: shared-workspace
