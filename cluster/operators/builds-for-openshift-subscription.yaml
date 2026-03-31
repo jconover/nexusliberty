@@ -8,7 +8,7 @@ metadata:
   namespace: openshift-operators
 spec:
   channel: candidate
-  name: builds-for-openshift-operator
+  name: openshift-builds-operator
   source: redhat-operators
   sourceNamespace: openshift-marketplace
   installPlanApproval: Automatic

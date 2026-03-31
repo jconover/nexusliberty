@@ -85,6 +85,13 @@ oc apply -f cluster/gitops/openshift-gitops-subscription.yaml
 # Watch the operator install (~2-3 minutes)
 oc get csv -n openshift-operators -w
 # Expected: openshift-gitops-operator.v1.x.x   Succeeded
+
+# Troubleshooting: If the CSV never appears, check OLM resolution status:
+oc get subscription openshift-gitops-operator -n openshift-operators -o jsonpath='{.status.conditions}' | jq .
+# A ResolutionFailed condition means another subscription is blocking OLM.
+# Common cause: a subscription with an incorrect package name (e.g.,
+# builds-for-openshift-operator vs the correct openshift-builds-operator).
+# Fix: delete the broken subscription, correct the package name, and reapply.
 ```
 
 ### Verify Argo CD is running
