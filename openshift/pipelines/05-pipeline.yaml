@@ -122,3 +122,5 @@ spec:
       workspaces:
         - name: source
           workspace: shared-workspace
+        - name: basic-auth
+          workspace: git-credentials

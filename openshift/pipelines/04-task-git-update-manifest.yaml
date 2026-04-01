@@ -26,13 +26,29 @@ spec:
   workspaces:
     - name: source
       description: Workspace with the cloned repo
+    - name: basic-auth
+      description: Git credentials (.git-credentials and .gitconfig)
+      optional: true
   steps:
     - name: update-and-push
-      image: alpine/git:latest
-      workingDir: $(workspaces.source.path)
+      image: docker.io/alpine/git:latest
       script: |
         #!/bin/sh
         set -e
+
+        # Configure git credentials if basic-auth workspace is bound
+        if [ -f "$(workspaces.basic-auth.path)/.git-credentials" ]; then
+          cp "$(workspaces.basic-auth.path)/.git-credentials" "${HOME}/.git-credentials"
+          cp "$(workspaces.basic-auth.path)/.gitconfig" "${HOME}/.gitconfig" 2>/dev/null || true
+          git config --global credential.helper store
+        fi
+
+        REPO_URL="https://github.com/jconover/nexusliberty.git"
+        WORK_DIR="/tmp/nexusliberty"
+
+        echo "Cloning repo for manifest update..."
+        git clone --depth 1 --branch main "${REPO_URL}" "${WORK_DIR}"
+        cd "${WORK_DIR}"
 
         echo "Updating manifest with image tag: $(params.image-tag)"
         sed -i "s|applicationImage: ghcr.io/jconover/nexusliberty-app:.*|applicationImage: ghcr.io/jconover/nexusliberty-app:$(params.image-tag)|" \
@@ -46,5 +62,5 @@ spec:
           echo "No changes to commit"
         else
           git commit -m "ci: update Liberty image tag to $(params.image-tag) [tekton]"
-          git push origin HEAD:main
+          git push origin main
         fi
