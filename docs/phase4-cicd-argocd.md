@@ -18,13 +18,14 @@ Code quality gates  →   Build Liberty container     →   Deploy to OKD
 Ansible lint            Run tests                       GitOps sync
 Unit tests              Push to GHCR                    Health checks
 Dockerfile lint         Commit updated image tag        Self-heal / Rollback
+Trivy image scan
 ```
 
 ### How It Flows
 
 ```
 Developer pushes PR
-  → GitHub Actions: lint, unit tests, Dockerfile lint (pre-merge gates)
+  → GitHub Actions: lint, unit tests, Dockerfile lint, Trivy image scan (pre-merge gates)
   → PR approved + merged to main
 
 Merge to main
@@ -282,7 +283,7 @@ After the workflows run, check badges at `https://github.com/jconover/nexusliber
 
 | Component | Where It Runs | What It Does |
 |---|---|---|
-| `liberty-build.yml` (quality-gates job) | GitHub Actions (cloud) | Maven build, unit tests, Dockerfile lint |
+| `liberty-build.yml` (quality-gates job) | GitHub Actions (cloud) | Maven build, unit tests, Dockerfile lint, Trivy image scan |
 | `liberty-build.yml` (trigger-tekton job) | GitHub Actions (cloud) | Authenticates to OKD, creates PipelineRun |
 | `ansible-lint.yml` | GitHub Actions (cloud) | Lints Ansible playbooks on changes |
 | OpenShift Pipelines Operator | OKD cluster | Manages Tekton lifecycle |

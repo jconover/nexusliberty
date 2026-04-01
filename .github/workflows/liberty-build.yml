@@ -41,10 +41,15 @@ jobs:
           dockerfile: docker/liberty-app/Dockerfile
           failure-threshold: warning
 
+      - name: Build Liberty image for scanning
+        run: |
+          docker build -t nexusliberty-app:scan \
+            -f docker/liberty-app/Dockerfile .
+
       - name: Scan image for vulnerabilities
         uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # 0.35.0
         with:
-          image-ref: ghcr.io/jconover/nexusliberty-app:sha-${{ github.sha }}
+          image-ref: nexusliberty-app:scan
           format: table
           exit-code: 1
           severity: CRITICAL,HIGH

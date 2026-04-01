@@ -167,7 +167,7 @@ The CLAUDE.md repo structure tree is wrong in **15+ places**. This is the highes
 
 1. **GitHub Actions not pinned to commit SHAs** — supply chain risk (all 3 workflows)
 2. **`contents: write` permission on liberty-build is overly broad** — needed only for manifest commit
-3. **No container image vulnerability scanning** — no Trivy/Grype/Snyk step
+3. ~~**No container image vulnerability scanning**~~ — ✅ Fixed: Trivy scan added to quality-gates job (builds image locally, scans before Tekton)
 4. **Bot commits to main could trigger infinite loop** — path filter currently prevents it but is fragile
 5. **No Docker layer caching** — Maven re-downloads all dependencies every build
 6. **`ansible-lint` version not pinned** — new release could break CI without code change
@@ -250,7 +250,7 @@ The CLAUDE.md repo structure tree is wrong in **15+ places**. This is the highes
 - Link docs/ phase guides from README
 - Add PodDisruptionBudgets and pod anti-affinity
 - Pin GitHub Actions to commit SHAs
-- Add container vulnerability scanning to CI
+- ~~Add container vulnerability scanning to CI~~ ✅ Done
 - Fix non-idempotent Vagrant provisioning scripts
 - Add `no_log: true` to Ansible tasks with credentials
 - Wire up unused Ansible handlers
