@@ -250,7 +250,7 @@ tkn pipelinerun describe $(tkn pipelinerun list -n liberty-apps --limit 1 -o nam
 
 ```bash
 # 1. Make a change to the app
-echo "// CI/CD pipeline test" >> app/src/main/java/io/openliberty/sample/system/SystemResource.java
+echo "// CI/CD pipeline test" >> app/src/main/java/io/devopsnexus/nexusapp/InfoResource.java
 
 # 2. Commit and push
 git add app/
