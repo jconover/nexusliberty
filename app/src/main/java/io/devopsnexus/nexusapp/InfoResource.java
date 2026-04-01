@@ -30,3 +30,4 @@ public class InfoResource {
         );
     }
 }
+// CI/CD pipeline test
