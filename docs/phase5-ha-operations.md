@@ -223,7 +223,7 @@ oc get prometheusrule nexusliberty-alerts -n liberty-apps
 |---|---|
 | `docker/liberty-app/server.xml` | Added `sessionCache-1.0` + Hazelcast JCache config |
 | `docker/liberty-app/Dockerfile` | Hazelcast JAR downloads + config copy |
-| `docker/liberty-app/hazelcast-client.xml` | Hazelcast K8s discovery config |
+| `docker/liberty-app/hazelcast.xml` | Hazelcast K8s discovery config |
 | `openshift/liberty-deployment/WebSphereLibertyApplication.yaml` | 2 replicas + ServiceAccount |
 | `openshift/liberty-deployment/rbac.yaml` | SA + Role + RoleBinding for pod discovery |
 | `openshift/liberty-deployment/headless-service.yaml` | Headless service for IHS pod discovery |
