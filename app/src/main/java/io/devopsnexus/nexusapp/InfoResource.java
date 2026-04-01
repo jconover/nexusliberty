@@ -32,3 +32,4 @@ public class InfoResource {
 }
 // CI/CD pipeline test
 // CI/CD pipeline test
+// CI/CD pipeline test
