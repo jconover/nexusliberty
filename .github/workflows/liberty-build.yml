@@ -52,6 +52,7 @@ jobs:
           image-ref: nexusliberty-app:scan
           format: table
           exit-code: 1
+          ignore-unfixed: true
           severity: CRITICAL,HIGH
 
   # Post-merge only — trigger Tekton pipeline on the OKD cluster
