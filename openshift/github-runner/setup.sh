@@ -52,6 +52,30 @@ for manifest in namespace.yaml serviceaccount.yaml rbac.yaml scc.yaml scc-cluste
 done
 
 # ---------------------------------------------------------------------------
+# Step 1b — Copy GHCR pull secret from liberty-apps (if available)
+# ---------------------------------------------------------------------------
+# The runner image is hosted on GHCR (private by default). OKD needs pull
+# credentials in the github-runner namespace. We copy the existing secret
+# from liberty-apps if it exists, then link it to the service accounts.
+# ---------------------------------------------------------------------------
+if oc get secret ghcr-pull-secret -n liberty-apps &>/dev/null; then
+  if oc get secret ghcr-pull-secret -n github-runner &>/dev/null; then
+    info "GHCR pull secret already exists in github-runner namespace"
+  else
+    log "Copying GHCR pull secret from liberty-apps to github-runner..."
+    oc get secret ghcr-pull-secret -n liberty-apps -o yaml | \
+      sed 's/namespace: liberty-apps/namespace: github-runner/' | \
+      grep -v -E '(resourceVersion|uid|creationTimestamp|selfLink)' | \
+      oc apply -n github-runner -f -
+  fi
+  info "Linking pull secret to service accounts..."
+  oc secrets link default ghcr-pull-secret --for=pull -n github-runner 2>/dev/null || true
+  oc secrets link github-runner-sa ghcr-pull-secret --for=pull -n github-runner 2>/dev/null || true
+else
+  echo "    [WARN] ghcr-pull-secret not found in liberty-apps — runner image must be public or you must create the pull secret manually"
+fi
+
+# ---------------------------------------------------------------------------
 # Step 2 — GitHub PAT secret
 # ---------------------------------------------------------------------------
 log "GitHub PAT secret setup"
@@ -126,33 +150,29 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# Step 6 — Bind SCC to both service accounts
+# Step 6 — Bind SCC to service accounts used by ARC runner pods
 # ---------------------------------------------------------------------------
-# ARC creates its own listener SA named arc-nexusliberty-gha-rs-no-permission
-# in addition to the github-runner-sa we manage. Both need the custom SCC so
-# pods can start under the restricted-compatible securityContext in arc-values.yaml.
+# ARC ephemeral runner pods may use the 'default' SA in the namespace even when
+# serviceAccountName is set in the pod template (ARC version-dependent behavior).
+# We bind the custom SCC to 'default', 'github-runner-sa', and the ARC-created
+# listener SA to cover all cases.
 # ---------------------------------------------------------------------------
-log "Binding SCC to ARC listener SA and github-runner-sa..."
+log "Binding github-arc SCC to service accounts in github-runner namespace..."
 
-ARC_LISTENER_SA="system:serviceaccount:github-runner:arc-nexusliberty-gha-rs-no-permission"
-RUNNER_SA="system:serviceaccount:github-runner:github-runner-sa"
+for SA_NAME in default github-runner-sa; do
+  info "Binding SCC to ${SA_NAME}..."
+  oc adm policy add-scc-to-user github-arc \
+    -z "${SA_NAME}" \
+    -n github-runner 2>/dev/null || true
+done
 
-if oc get clusterrolebinding arc-runner-scc-binding &>/dev/null; then
-  info "SCC ClusterRoleBinding already exists — patching subjects..."
-  oc patch clusterrolebinding arc-runner-scc-binding \
-    --type=json \
-    -p="[
-      {\"op\":\"replace\",\"path\":\"/subjects\",\"value\":[
-        {\"kind\":\"ServiceAccount\",\"name\":\"arc-nexusliberty-gha-rs-no-permission\",\"namespace\":\"github-runner\"},
-        {\"kind\":\"ServiceAccount\",\"name\":\"github-runner-sa\",\"namespace\":\"github-runner\"}
-      ]}
-    ]"
-else
-  info "Creating SCC ClusterRoleBinding..."
-  oc create clusterrolebinding arc-runner-scc-binding \
-    --clusterrole=github-runner-scc \
-    --user="${ARC_LISTENER_SA}" \
-    --user="${RUNNER_SA}"
+# Also bind the ARC-created listener SA if it exists
+ARC_LISTENER_SA="arc-nexusliberty-gha-rs-no-permission"
+if oc get sa "${ARC_LISTENER_SA}" -n github-runner &>/dev/null; then
+  info "Binding SCC to ${ARC_LISTENER_SA}..."
+  oc adm policy add-scc-to-user github-arc \
+    -z "${ARC_LISTENER_SA}" \
+    -n github-runner 2>/dev/null || true
 fi
 
 # ---------------------------------------------------------------------------
