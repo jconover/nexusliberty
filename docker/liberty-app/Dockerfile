@@ -19,7 +19,7 @@ RUN mvn clean package -B
 # =============================================================================
 # Stage 2 — Open Liberty runtime
 # =============================================================================
-FROM icr.io/appcafe/open-liberty:kernel-slim-java17-openj9-ubi AS runtime
+FROM icr.io/appcafe/open-liberty:kernel-slim-java17-openj9-ubi-minimal AS runtime
 
 # Copy server configuration
 COPY --chown=1001:0 docker/liberty-app/server.xml /config/server.xml
