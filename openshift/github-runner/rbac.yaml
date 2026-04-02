@@ -1,0 +1,61 @@
+---
+# ClusterRole granting CI-specific permissions across namespaces.
+# Intentionally scoped — no cluster-admin, no secret access, no RBAC escalation.
+# Permissions are the minimum required for the Liberty CI/CD pipeline:
+#   - Create PipelineRuns to trigger Tekton builds in liberty-apps
+#   - Read pods/deployments/routes/services to verify deployment health
+#   - Apply (create + patch) manifests for GitOps-style manifest updates
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: github-runner-ci
+  labels:
+    app.kubernetes.io/part-of: nexusliberty
+    app.kubernetes.io/component: ci
+rules:
+  # Trigger Tekton pipelines from CI
+  - apiGroups: ["tekton.dev"]
+    resources: ["pipelineruns"]
+    verbs: ["create", "get", "list", "watch"]
+
+  # Read deployment state for health checks and rollout verification
+  - apiGroups: [""]
+    resources: ["pods", "services", "endpoints"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["apps"]
+    resources: ["deployments", "replicasets"]
+    verbs: ["get", "list", "watch"]
+
+  # Read OpenShift Routes to confirm application exposure
+  - apiGroups: ["route.openshift.io"]
+    resources: ["routes"]
+    verbs: ["get", "list", "watch"]
+
+  # Apply Liberty Operator CRs and plain manifests during GitOps updates
+  - apiGroups: ["liberty.websphere.ibm.com"]
+    resources: ["webspherelibertyapplications"]
+    verbs: ["get", "list", "patch", "update"]
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get", "list", "create", "patch", "update"]
+
+---
+# Bind the ClusterRole to the runner ServiceAccount.
+# The binding is cluster-scoped (ClusterRoleBinding) so that the runner can
+# operate in liberty-apps from its home namespace (github-runner). Access is
+# still limited to only what the ClusterRole permits above.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: github-runner-ci-binding
+  labels:
+    app.kubernetes.io/part-of: nexusliberty
+    app.kubernetes.io/component: ci
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: github-runner-ci
+subjects:
+  - kind: ServiceAccount
+    name: github-runner-sa
+    namespace: github-runner

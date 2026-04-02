@@ -1,0 +1,32 @@
+---
+# ClusterRole that grants the `use` verb on the github-arc SCC.
+#
+# In OpenShift, pods cannot use an SCC unless their ServiceAccount holds a
+# RoleBinding or ClusterRoleBinding to a role that grants `use` on that SCC.
+# This ClusterRole follows the platform convention:
+#   system:openshift:scc:<scc-name>
+#
+# Usage — bind this role to the runner ServiceAccount with a RoleBinding
+# scoped to the github-runner namespace (preferred: least-privilege) or a
+# ClusterRoleBinding if runners span multiple namespaces:
+#
+#   oc create rolebinding github-arc-scc \
+#     --clusterrole=system:openshift:scc:github-arc \
+#     --serviceaccount=github-runner:github-runner-sa \
+#     -n github-runner
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: system:openshift:scc:github-arc
+  labels:
+    app.kubernetes.io/part-of: nexusliberty
+    app.kubernetes.io/component: ci
+  annotations:
+    kubernetes.io/description: >
+      Grants `use` on the github-arc SCC. Bind this to the github-runner-sa
+      ServiceAccount so ARC runner pods can run as UID 1001 / GID 123.
+rules:
+  - apiGroups: ["security.openshift.io"]
+    resources: ["securitycontextconstraints"]
+    resourceNames: ["github-arc"]
+    verbs: ["use"]
