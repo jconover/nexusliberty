@@ -10,6 +10,28 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # ---------------------------------------------------------------------------
+# WSL2 / Rancher Desktop workaround
+# ---------------------------------------------------------------------------
+# Rancher Desktop installs docker-credential-secretservice on the Windows side
+# but it cannot load libsecret-1.so.0 inside WSL2, causing Helm OCI pulls to
+# fail. If the broken binary is detected, create a shim that returns empty
+# credentials so Helm can reach public registries (like ghcr.io).
+if docker-credential-secretservice list >/dev/null 2>&1; then
+  : # credential helper works — nothing to do
+else
+  if command -v docker-credential-secretservice >/dev/null 2>&1; then
+    echo "==> WSL2 workaround: docker-credential-secretservice is broken, installing shim..."
+    mkdir -p "$HOME/bin"
+    cat > "$HOME/bin/docker-credential-secretservice" << 'SHIM'
+#!/bin/bash
+echo '{"ServerURL":"","Username":"","Secret":""}'
+SHIM
+    chmod +x "$HOME/bin/docker-credential-secretservice"
+    export PATH="$HOME/bin:$PATH"
+  fi
+fi
+
+# ---------------------------------------------------------------------------
 # Helper
 # ---------------------------------------------------------------------------
 log()  { echo ""; echo "==> $*"; }
