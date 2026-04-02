@@ -25,7 +25,7 @@ Trivy image scan
 
 ```
 Developer pushes PR
-  → GitHub Actions: lint, unit tests, Dockerfile lint, Trivy image scan (pre-merge gates)
+  → GitHub Actions: lint, unit tests, Dockerfile lint, Trivy image scan — CRITICAL/HIGH, image built locally, unfixed CVEs skipped (pre-merge gates)
   → PR approved + merged to main
 
 Merge to main
@@ -212,14 +212,16 @@ oc get application -n openshift-gitops
 # Expected: nexusliberty-app   Synced   Healthy
 ```
 
-## Step 6 — Configure GitHub Secrets
+## Step 6 — Configure GitHub Secrets and Variables
 
-The GitHub Actions workflow needs these secrets to trigger Tekton:
+The GitHub Actions workflow needs one Variable and one Secret to trigger Tekton:
 
-| Secret | Value |
-|---|---|
-| `OKD_SERVER_URL` | `https://api.nexuslab.nexuslab.local:6443` |
-| `OKD_TOKEN` | Service account token with pipeline permissions |
+| Type | Name | Value |
+|---|---|---|
+| Variable | `OKD_SERVER_URL` | `https://api.nexuslab.nexuslab.local:6443` |
+| Secret | `OKD_TOKEN` | Service account token with pipeline permissions |
+
+> **Why Variable vs Secret?** The OKD API server URL is not sensitive — it is a cluster endpoint that is already visible in kubeconfig files and cluster documentation. Using a GitHub Actions Variable (rather than a Secret) keeps it readable in workflow logs and avoids unnecessary secret masking. Only the `OKD_TOKEN` credential needs to be stored as a Secret.
 
 To get a long-lived token:
 ```bash
@@ -229,6 +231,8 @@ oc create token liberty-pipeline-sa -n liberty-apps --duration=8760h
 ```
 
 Set these at: GitHub repo → Settings → Secrets and variables → Actions
+- **Variables** tab: add `OKD_SERVER_URL`
+- **Secrets** tab: add `OKD_TOKEN`
 
 ## Step 7 — Test the Full Pipeline
 
@@ -283,7 +287,7 @@ After the workflows run, check badges at `https://github.com/jconover/nexusliber
 
 | Component | Where It Runs | What It Does |
 |---|---|---|
-| `liberty-build.yml` (quality-gates job) | GitHub Actions (cloud) | Maven build, unit tests, Dockerfile lint, Trivy image scan |
+| `liberty-build.yml` (quality-gates job) | GitHub Actions (cloud) | Maven build, unit tests, Dockerfile lint, Trivy image scan (CRITICAL/HIGH, unfixed CVEs skipped) |
 | `liberty-build.yml` (trigger-tekton job) | GitHub Actions (cloud) | Authenticates to OKD, creates PipelineRun |
 | `ansible-lint.yml` | GitHub Actions (cloud) | Lints Ansible playbooks on changes |
 | OpenShift Pipelines Operator | OKD cluster | Manages Tekton lifecycle |

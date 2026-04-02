@@ -19,7 +19,7 @@ Step-by-step guide to build a custom Open Liberty container image, push to GitHu
 │  Stage 1: maven:3.9-eclipse-temurin-17                   │
 │    └─ Compiles app/src → nexus-app.war                   │
 │                                                          │
-│  Stage 2: open-liberty:kernel-slim-java17-openj9-ubi     │
+│  Stage 2: open-liberty:kernel-slim-java17-openj9-ubi-minimal │
 │    ├─ Installs features from server.xml                  │
 │    ├─ Copies nexus-app.war into /config/apps/            │
 │    └─ Optimizes image with configure.sh                  │
