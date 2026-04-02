@@ -29,8 +29,8 @@ Developer pushes PR
   → PR approved + merged to main
 
 Merge to main
-  → GitHub Actions: quality gates pass
-  → GitHub Actions: triggers Tekton PipelineRun via oc CLI
+  → GitHub Actions (cloud): quality gates pass
+  → GitHub Actions (self-hosted runner on OKD): triggers Tekton PipelineRun via oc CLI
   → Tekton Pipeline (runs on OKD cluster):
       1. git-clone — checkout repo
       2. maven-build — compile + package the Java app
@@ -212,16 +212,65 @@ oc get application -n openshift-gitops
 # Expected: nexusliberty-app   Synced   Healthy
 ```
 
-## Step 6 — Configure GitHub Secrets and Variables
+## Step 6 — Deploy GitHub Actions Self-Hosted Runner on OKD
 
-The GitHub Actions workflow needs one Variable and one Secret to trigger Tekton:
+### Why a self-hosted runner?
+
+GitHub Actions cloud runners run on GitHub's infrastructure and have no route to your homelab OKD cluster. The OKD API (`api.nexuslab.nexuslab.local:6443`) is on a private network unreachable from the public internet. Rather than exposing the API externally, a self-hosted runner pod runs inside the cluster itself — it has direct API access via the in-cluster Kubernetes service account and never needs to authenticate over the public internet.
+
+### Prerequisites
+
+- Helm 3.x installed on your workstation
+- `oc` CLI authenticated to the OKD cluster as `cluster-admin`
+- GitHub Personal Access Token with `repo` scope (used by the Actions Runner Controller to register the runner with GitHub)
+
+### Build and push the custom runner image
+
+The runner uses a custom image that includes `oc` and other tooling needed by the workflow jobs.
+
+```bash
+docker build -t ghcr.io/jconover/nexusliberty-runner:latest docker/github-runner/
+docker push ghcr.io/jconover/nexusliberty-runner:latest
+```
+
+### Deploy with the setup script
+
+```bash
+bash openshift/github-runner/setup.sh
+```
+
+This script installs the Actions Runner Controller (ARC) via Helm into the `github-arc-system` namespace and creates a `RunnerScaleSet` in the `github-runner` namespace configured to pull jobs labelled `arc-nexusliberty`.
+
+### Verify the runner is online
+
+```bash
+# Controller pod should be running
+oc get pods -n github-arc-system
+
+# Runner pod should be running and listening for jobs
+oc get pods -n github-runner
+```
+
+Then confirm in GitHub: **Settings → Actions → Runners** — the runner should appear with status **Online**.
+
+### Workflow change
+
+The `trigger-tekton` job in `liberty-build.yml` now uses:
+
+```yaml
+runs-on: arc-nexusliberty
+```
+
+Because the runner pod runs inside the cluster with an in-cluster `ServiceAccount`, it can invoke `oc` directly without needing `OKD_SERVER_URL` or `OKD_TOKEN` secrets for authentication.
+
+## Step 7 — Configure GitHub Secrets and Variables (Optional)
+
+> **Note:** `OKD_SERVER_URL` and `OKD_TOKEN` are **no longer required** for the `trigger-tekton` job. The self-hosted runner (deployed in Step 6) authenticates to OKD via its in-cluster `ServiceAccount`, so no external credentials are needed. You can keep these for other workflows or remove them from the repository settings.
 
 | Type | Name | Value |
 |---|---|---|
 | Variable | `OKD_SERVER_URL` | `https://api.nexuslab.nexuslab.local:6443` |
 | Secret | `OKD_TOKEN` | Service account token with pipeline permissions |
-
-> **Why Variable vs Secret?** The OKD API server URL is not sensitive — it is a cluster endpoint that is already visible in kubeconfig files and cluster documentation. Using a GitHub Actions Variable (rather than a Secret) keeps it readable in workflow logs and avoids unnecessary secret masking. Only the `OKD_TOKEN` credential needs to be stored as a Secret.
 
 To get a long-lived token:
 ```bash
@@ -234,7 +283,7 @@ Set these at: GitHub repo → Settings → Secrets and variables → Actions
 - **Variables** tab: add `OKD_SERVER_URL`
 - **Secrets** tab: add `OKD_TOKEN`
 
-## Step 7 — Test the Full Pipeline
+## Step 8 — Test the Full Pipeline
 
 ### Manual test (Tekton only)
 
@@ -277,7 +326,7 @@ ROUTE=$(oc get route nexusliberty-app -n liberty-apps -o jsonpath='{.spec.host}'
 curl -k https://${ROUTE}/health/ready
 ```
 
-## Step 8 — Verify README Badges
+## Step 9 — Verify README Badges
 
 After the workflows run, check badges at `https://github.com/jconover/nexusliberty`:
 - **Liberty CI** — green if quality gates + Tekton trigger passed
@@ -288,7 +337,8 @@ After the workflows run, check badges at `https://github.com/jconover/nexusliber
 | Component | Where It Runs | What It Does |
 |---|---|---|
 | `liberty-build.yml` (quality-gates job) | GitHub Actions (cloud) | Maven build, unit tests, Dockerfile lint, Trivy image scan (CRITICAL/HIGH, unfixed CVEs skipped) |
-| `liberty-build.yml` (trigger-tekton job) | GitHub Actions (cloud) | Authenticates to OKD, creates PipelineRun |
+| `liberty-build.yml` (trigger-tekton job) | GitHub Actions (self-hosted runner on OKD) | Authenticates to OKD via in-cluster ServiceAccount, creates PipelineRun |
+| Self-hosted runner (Actions Runner Controller) | OKD cluster (github-runner namespace) | Listens for `arc-nexusliberty` jobs, executes `oc` commands with direct cluster access |
 | `ansible-lint.yml` | GitHub Actions (cloud) | Lints Ansible playbooks on changes |
 | OpenShift Pipelines Operator | OKD cluster | Manages Tekton lifecycle |
 | `liberty-build-pipeline` | OKD cluster (liberty-apps) | git-clone → maven → buildah → push → commit tag |
@@ -296,6 +346,14 @@ After the workflows run, check badges at `https://github.com/jconover/nexusliber
 | Argo CD Application | OKD cluster | Watches GitHub repo, syncs manifests to liberty-apps |
 
 ## Troubleshooting
+
+**Self-hosted runner pod stuck in CreateContainerConfigError**
+- SCC binding issue — re-run: `oc policy add-role-to-user system:openshift:scc:github-arc -z arc-nexusliberty-gha-rs-no-permission -n github-runner`
+- Check events: `oc get events -n github-runner --sort-by=.lastTimestamp`
+
+**Self-hosted runner not appearing in GitHub Settings**
+- Check listener pod logs: `oc logs -l app.kubernetes.io/name=arc-nexusliberty -n github-runner`
+- Verify PAT has `repo` scope and is not expired
 
 **PipelineRun fails at git-clone**
 - Check git-credentials secret is correct: `oc get secret git-credentials -n liberty-apps -o yaml`

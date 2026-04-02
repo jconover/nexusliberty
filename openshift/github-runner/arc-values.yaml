@@ -1,0 +1,69 @@
+# GitHub Actions Runner Scale Set — Helm values for ARC
+# Deploys self-hosted runners into the github-runner namespace on OKD.
+#
+# Install command (after controller is running):
+#   helm install nexusliberty-runners \
+#     oci://ghcr.io/actions/actions-runner-controller-charts/gha-runner-scale-set \
+#     -n github-runner --create-namespace \
+#     -f openshift/github-runner/arc-values.yaml
+
+# ---------------------------------------------------------------------------
+# GitHub repository this scale set registers runners against.
+# ---------------------------------------------------------------------------
+githubConfigUrl: "https://github.com/jconover/nexusliberty"
+
+# ---------------------------------------------------------------------------
+# Pre-created Kubernetes secret holding the GitHub PAT (or GitHub App creds).
+# Create it before running helm install:
+#   oc create secret generic github-arc-pat \
+#     -n github-runner \
+#     --from-literal=github_token=<YOUR_PAT>
+# ---------------------------------------------------------------------------
+githubConfigSecret: github-arc-pat
+
+# ---------------------------------------------------------------------------
+# ARC controller service account — must match what the controller Helm chart
+# created in the github-arc-system namespace.
+# ---------------------------------------------------------------------------
+controllerServiceAccount:
+  name: arc-system-gha-rs-controller
+  namespace: github-arc-system
+
+# ---------------------------------------------------------------------------
+# Runner autoscaling bounds.
+# minRunners: keep one warm runner so the first job starts immediately.
+# maxRunners: cap at 3 to match the 3-node homelab cluster capacity.
+# ---------------------------------------------------------------------------
+minRunners: 1
+maxRunners: 3
+
+# ---------------------------------------------------------------------------
+# Pod template for each runner pod.
+# ---------------------------------------------------------------------------
+template:
+  spec:
+    # Service account with the RBAC needed for CI jobs (oc, kubectl, etc.).
+    serviceAccountName: github-runner-sa
+
+    containers:
+      - name: runner
+        # Custom runner image built from docker/runner/Dockerfile and pushed to GHCR.
+        # Includes oc CLI, helm, maven, and other CI tooling needed by the pipeline.
+        image: ghcr.io/jconover/nexusliberty-runner:latest
+
+        # ARC runner entrypoint — do not change unless you know what you're doing.
+        command: ["/home/runner/run.sh"]
+
+        # ---------------------------------------------------------------------------
+        # Security context — OKD restricted SCC compatible.
+        # runAsUser 1001 / runAsGroup 123 must match the runner image's USER directive
+        # so file permissions inside the container are consistent.
+        # ---------------------------------------------------------------------------
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1001
+          runAsGroup: 123
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL

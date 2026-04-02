@@ -1,0 +1,12 @@
+---
+# Dedicated namespace for GitHub Actions Runner Controller (ARC) runner pods.
+# Isolating runners from application workloads (liberty-apps) limits blast radius
+# if a runner is compromised — it cannot directly access Liberty resources without
+# the explicit cross-namespace RBAC defined in rbac.yaml.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: github-runner
+  labels:
+    app.kubernetes.io/part-of: nexusliberty
+    app.kubernetes.io/component: ci

@@ -59,22 +59,14 @@ jobs:
   trigger-tekton:
     needs: quality-gates
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    runs-on: ubuntu-latest
+    # Self-hosted runner pod runs inside the OKD cluster with an in-cluster
+    # ServiceAccount — oc is pre-installed and already authenticated, so no
+    # oc-login or CLI install steps are needed.
+    runs-on: arc-nexusliberty
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
-
-      - name: Install oc CLI
-        uses: redhat-actions/openshift-tools-installer@8f59d06a9eebd2d343f4b9d31a92af0203825fd5 # v1.9.2
-        with:
-          oc: latest
-
-      - name: Login to OKD
-        uses: redhat-actions/oc-login@5eb45e848b168b6bf6b8fe7f1561003c12e3c99d # v1.3
-        with:
-          openshift_server_url: ${{ vars.OKD_SERVER_URL }}
-          openshift_token: ${{ secrets.OKD_TOKEN }}
 
       - name: Trigger Tekton PipelineRun
         run: oc create -f openshift/pipelines/06-pipelinerun-template.yaml -n liberty-apps

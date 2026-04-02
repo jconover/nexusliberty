@@ -1,0 +1,87 @@
+---
+# Custom SecurityContextConstraints for GitHub ARC runner pods.
+#
+# The official actions-runner-controller runner image (ghcr.io/actions/actions-runner)
+# requires UID 1001 and GID 123 — matching the non-root user baked into the image.
+# OpenShift's default restricted SCC assigns a random UID from the namespace range,
+# which breaks the runner image. This SCC pins exactly the UIDs the image expects.
+#
+# Security posture:
+#   - No privilege escalation
+#   - All Linux capabilities dropped
+#   - Host namespaces, host network, host ports, host PID/IPC all denied
+#   - readOnlyRootFilesystem=false: runner must write to its work directory
+#   - Only standard Kubernetes volume types permitted (no hostPath)
+#
+# To assign this SCC to the runner ServiceAccount:
+#   oc adm policy add-scc-to-user github-arc \
+#     system:serviceaccount:github-runner:github-runner-sa
+# (or apply scc-clusterrole.yaml + RoleBinding for a declarative approach)
+apiVersion: security.openshift.io/v1
+kind: SecurityContextConstraints
+metadata:
+  name: github-arc
+  labels:
+    app.kubernetes.io/part-of: nexusliberty
+    app.kubernetes.io/component: ci
+  annotations:
+    kubernetes.io/description: >
+      SCC for GitHub ARC runner pods. Pins UID 1001 / GID 123 to match the
+      official runner image, while enforcing a no-privilege, no-host-access policy.
+
+# Deny all host-level access
+allowHostDirVolumePlugin: false
+allowHostIPC: false
+allowHostNetwork: false
+allowHostPID: false
+allowHostPorts: false
+
+# No privilege escalation permitted
+allowPrivilegeEscalation: false
+allowPrivilegedContainer: false
+
+# Drop all capabilities; do not allow adding any back
+defaultAddCapabilities: []
+requiredDropCapabilities:
+  - ALL
+allowedCapabilities: []
+
+# Runner needs to write to its work directory (/home/runner/work)
+readOnlyRootFilesystem: false
+
+# Pin to the UID the runner image was built with
+runAsUser:
+  type: MustRunAs
+  uid: 1001
+
+# Pin to the GID the runner image expects for file ownership
+fsGroup:
+  type: MustRunAs
+  ranges:
+    - min: 123
+      max: 123
+
+supplementalGroups:
+  type: MustRunAs
+  ranges:
+    - min: 123
+      max: 123
+
+# SELinux: let the platform assign the label (standard for non-privileged workloads)
+seLinuxContext:
+  type: MustRunAs
+
+# Permitted volume types — no hostPath or NFS to prevent host escape vectors
+volumes:
+  - configMap
+  - csi
+  - downwardAPI
+  - emptyDir
+  - ephemeral
+  - persistentVolumeClaim
+  - projected
+  - secret
+
+# No users or groups granted by default; use scc-clusterrole.yaml + binding
+users: []
+groups: []
