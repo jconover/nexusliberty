@@ -42,7 +42,7 @@ The CLAUDE.md repo structure tree is wrong in **15+ places**. This is the highes
 - `cluster/namespace/liberty-apps.yaml`
 - `ansible/ansible.cfg`, `ansible/roles/was-cluster/`, `was-deploy/`, `was-dmgr/`, `was-nodeagent/`
 - `openshift/ihs-deployment/`, `openshift/monitoring/`
-- `openshift/liberty-deployment/headless-service.yaml`, `rbac.yaml`
+- `openshift/liberty-deployment/rbac.yaml`
 - `docker/liberty-app/hazelcast-client.xml`, `docker/ihs/httpd.conf`
 - `.github/workflows/ihs-build.yml`
 - `docs/phase1-5 guides`, `docs/was-runbook.md`

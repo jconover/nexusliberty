@@ -75,14 +75,14 @@ oc delete pod $(oc get pods -n liberty-apps -l app.kubernetes.io/name=nexusliber
 
 ## Step 2 — IHS Load Balancing
 
-### 2.1 Deploy the Headless Service
+### 2.1 Verify the Operator-Managed Service
+
+The Liberty Operator automatically creates a ClusterIP service for the application.
+IHS proxies to this service, which Kubernetes load-balances across Liberty pods.
 
 ```bash
-# Headless service exposes individual pod IPs for IHS discovery
-oc apply -f openshift/liberty-deployment/headless-service.yaml
-
-# Verify it resolves to pod IPs (not a single ClusterIP)
-oc exec <any-pod> -n liberty-apps -- nslookup nexusliberty-app-headless.liberty-apps.svc.cluster.local
+# Verify the operator-created service exists
+oc get svc nexusliberty-app -n liberty-apps
 ```
 
 ### 2.2 Build and Push the IHS Image
@@ -226,9 +226,8 @@ oc get prometheusrule nexusliberty-alerts -n liberty-apps
 | `docker/liberty-app/hazelcast.xml` | Hazelcast K8s discovery config |
 | `openshift/liberty-deployment/WebSphereLibertyApplication.yaml` | 2 replicas + ServiceAccount |
 | `openshift/liberty-deployment/rbac.yaml` | SA + Role + RoleBinding for pod discovery |
-| `openshift/liberty-deployment/headless-service.yaml` | Headless service for IHS pod discovery |
 | `docker/ihs/Dockerfile` | Containerized IHS (Apache HTTPD + mod_proxy_balancer) |
-| `docker/ihs/httpd.conf` | Reverse proxy config targeting Liberty headless service |
+| `docker/ihs/httpd.conf` | Reverse proxy config targeting Liberty ClusterIP service |
 | `openshift/ihs-deployment/deployment.yaml` | IHS Deployment on OKD |
 | `openshift/ihs-deployment/service.yaml` | IHS Service |
 | `openshift/ihs-deployment/route.yaml` | IHS OKD Route |

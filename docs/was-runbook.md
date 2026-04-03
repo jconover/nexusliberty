@@ -274,8 +274,9 @@ oc auth can-i list pods --as=system:serviceaccount:liberty-apps:nexusliberty-sa 
 # 3. Check Hazelcast logs for discovery errors
 oc logs nexusliberty-app-<hash> -n liberty-apps | grep -i "hazelcast" | grep -iE "error|warn|exception"
 
-# 4. Verify headless service resolves to pod IPs
-oc exec nexusliberty-app-<hash> -n liberty-apps -- nslookup nexusliberty-app-headless.liberty-apps.svc.cluster.local
+# 4. Verify operator-managed service resolves
+oc get svc nexusliberty-app -n liberty-apps
+oc get endpoints nexusliberty-app -n liberty-apps
 ```
 
 ### 6.3 Metrics Not Appearing in Prometheus
@@ -299,7 +300,7 @@ oc get networkpolicy -n liberty-apps
 
 ```bash
 # Containerized IHS — check Liberty backend is reachable
-oc exec <ihs-pod> -n liberty-apps -- curl -s http://nexusliberty-app-headless.liberty-apps.svc.cluster.local:9080/health
+oc exec <ihs-pod> -n liberty-apps -- curl -s http://nexusliberty-app.liberty-apps.svc.cluster.local:9080/health
 
 # Legacy IHS — check plugin-cfg.xml is current
 cat /opt/IBM/WebSphere/Plugins/config/webserver1/plugin-cfg.xml

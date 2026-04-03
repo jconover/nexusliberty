@@ -168,7 +168,7 @@ Key technical choices and the reasoning behind them:
 
 - **Open Liberty over IBM WAS Liberty** — Open Liberty is the upstream open-source runtime. No license fees, same enterprise features, and the Liberty Operator supports it natively. Ideal for a portfolio project that anyone can reproduce.
 
-- **Hazelcast JCache for session replication** — Embedded Hazelcast with Kubernetes-native discovery (via the headless service and RBAC) provides session clustering without an external cache tier. Keeps the architecture simple while demonstrating real HA behavior.
+- **Hazelcast JCache for session replication** — Embedded Hazelcast with Kubernetes-native discovery (via the Kubernetes API and RBAC) provides session clustering without an external cache tier. Keeps the architecture simple while demonstrating real HA behavior.
 
 - **Edge-terminated TLS Routes** — OpenShift Routes handle TLS termination at the edge rather than inside Liberty. This simplifies certificate management and aligns with how most enterprises deploy in production.
 
@@ -223,7 +223,6 @@ nexusliberty/
 ├── openshift/
 │   ├── liberty-deployment/                # Liberty Operator CR + RBAC
 │   │   ├── WebSphereLibertyApplication.yaml
-│   │   ├── headless-service.yaml          # Hazelcast cluster discovery
 │   │   └── rbac.yaml
 │   ├── ihs-deployment/                    # IHS load balancer deployment
 │   │   ├── deployment.yaml
