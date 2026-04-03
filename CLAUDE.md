@@ -145,7 +145,6 @@ nexusliberty/
 ├── openshift/                         # OpenShift deployment manifests
 │   ├── liberty-deployment/
 │   │   ├── WebSphereLibertyApplication.yaml  # Liberty Operator CR
-│   │   ├── headless-service.yaml      # Hazelcast cluster discovery
 │   │   └── rbac.yaml                  # ServiceAccount + Hazelcast RBAC
 │   ├── ihs-deployment/
 │   │   ├── deployment.yaml            # IHS (Apache) load balancer
@@ -375,7 +374,7 @@ before suggesting fixes.
 - Vagrant WAS simulation is for config/automation demo only — not a licensed WAS install
 - Use Open Liberty (open-source upstream) for container builds — no license required
 - The IHS container is Apache HTTPD (not actual IBM IHS) — simulates the IHS pattern
-- Hazelcast discovery requires the headless service and RBAC in `openshift/liberty-deployment/`
+- Hazelcast discovery uses the Kubernetes API (not a headless service) — requires RBAC in `openshift/liberty-deployment/`
 
 ### Environment details
 - Real infrastructure values (IPs, hostnames, domains) are in `CLAUDE.private.md` (local only, never commit)

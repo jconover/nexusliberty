@@ -14,16 +14,16 @@ metadata:
 spec:
   project: default
 
-  # The Liberty operator injects probes (liveness, readiness, startup) into the
-  # WebSphereLibertyApplication CR after ArgoCD applies it. Without this ignore
-  # rule, ArgoCD permanently shows OutOfSync for those operator-managed fields.
+  # The Liberty operator controller ("manager") mutates the CR after Argo CD
+  # applies it — injecting default probes, TLS settings, pull policy, etc.
+  # Rather than listing individual jsonPointers, ignore all fields owned by
+  # the operator's field manager. This uses Kubernetes server-side apply
+  # metadata and is the recommended approach for operator-managed CRs.
   ignoreDifferences:
     - group: liberty.websphere.ibm.com
       kind: WebSphereLibertyApplication
-      jsonPointers:
-        - /spec/livenessProbe
-        - /spec/readinessProbe
-        - /spec/startupProbe
+      managedFieldsManagers:
+        - manager
 
   source:
     repoURL: https://github.com/jconover/nexusliberty.git
