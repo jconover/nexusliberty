@@ -239,7 +239,7 @@ docker push ghcr.io/jconover/nexusliberty-runner:latest
 bash openshift/github-runner/setup.sh
 ```
 
-This script installs the Actions Runner Controller (ARC) via Helm into the `github-arc-system` namespace and creates a `RunnerScaleSet` in the `github-runner` namespace configured to pull jobs labelled `arc-nexusliberty`.
+This script installs the Actions Runner Controller (ARC) via Helm into the `github-arc-system` namespace and creates a `RunnerScaleSet` in the `github-runner` namespace configured to pull jobs labelled `nexusliberty-runners`.
 
 ### Verify the runner is online
 
@@ -258,7 +258,7 @@ Then confirm in GitHub: **Settings → Actions → Runners** — the runner shou
 The `trigger-tekton` job in `liberty-build.yml` now uses:
 
 ```yaml
-runs-on: arc-nexusliberty
+runs-on: nexusliberty-runners
 ```
 
 Because the runner pod runs inside the cluster with an in-cluster `ServiceAccount`, it can invoke `oc` directly without needing `OKD_SERVER_URL` or `OKD_TOKEN` secrets for authentication.
@@ -338,7 +338,7 @@ After the workflows run, check badges at `https://github.com/jconover/nexusliber
 |---|---|---|
 | `liberty-build.yml` (quality-gates job) | GitHub Actions (cloud) | Maven build, unit tests, Dockerfile lint, Trivy image scan (CRITICAL/HIGH, unfixed CVEs skipped) |
 | `liberty-build.yml` (trigger-tekton job) | GitHub Actions (self-hosted runner on OKD) | Authenticates to OKD via in-cluster ServiceAccount, creates PipelineRun |
-| Self-hosted runner (Actions Runner Controller) | OKD cluster (github-runner namespace) | Listens for `arc-nexusliberty` jobs, executes `oc` commands with direct cluster access |
+| Self-hosted runner (Actions Runner Controller) | OKD cluster (github-runner namespace) | Listens for `nexusliberty-runners` jobs, executes `oc` commands with direct cluster access |
 | `ansible-lint.yml` | GitHub Actions (cloud) | Lints Ansible playbooks on changes |
 | OpenShift Pipelines Operator | OKD cluster | Manages Tekton lifecycle |
 | `liberty-build-pipeline` | OKD cluster (liberty-apps) | git-clone → maven → buildah → push → commit tag |

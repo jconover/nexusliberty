@@ -62,7 +62,7 @@ jobs:
     # Self-hosted runner pod runs inside the OKD cluster with an in-cluster
     # ServiceAccount — oc is pre-installed and already authenticated, so no
     # oc-login or CLI install steps are needed.
-    runs-on: arc-nexusliberty
+    runs-on: nexusliberty-runners
 
     steps:
       - name: Checkout repository
