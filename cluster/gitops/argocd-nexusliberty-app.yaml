@@ -14,6 +14,17 @@ metadata:
 spec:
   project: default
 
+  # The Liberty operator injects probes (liveness, readiness, startup) into the
+  # WebSphereLibertyApplication CR after ArgoCD applies it. Without this ignore
+  # rule, ArgoCD permanently shows OutOfSync for those operator-managed fields.
+  ignoreDifferences:
+    - group: liberty.websphere.ibm.com
+      kind: WebSphereLibertyApplication
+      jsonPointers:
+        - /spec/livenessProbe
+        - /spec/readinessProbe
+        - /spec/startupProbe
+
   source:
     repoURL: https://github.com/jconover/nexusliberty.git
     targetRevision: main
