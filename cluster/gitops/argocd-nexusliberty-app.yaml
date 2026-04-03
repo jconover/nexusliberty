@@ -14,16 +14,19 @@ metadata:
 spec:
   project: default
 
-  # The Liberty operator controller ("manager") mutates the CR after Argo CD
-  # applies it — injecting default probes, TLS settings, pull policy, etc.
-  # Rather than listing individual jsonPointers, ignore all fields owned by
-  # the operator's field manager. This uses Kubernetes server-side apply
-  # metadata and is the recommended approach for operator-managed CRs.
+  # The Liberty Operator mutates the WLA CR after Argo CD applies it:
+  # - Strips probes from the CR (applies them to the Deployment instead)
+  # - Injects defaults (applicationName, productEntitlementSource)
+  # Ignore these operator-managed fields to prevent an OutOfSync loop.
   ignoreDifferences:
     - group: liberty.websphere.ibm.com
       kind: WebSphereLibertyApplication
-      managedFieldsManagers:
-        - manager
+      jsonPointers:
+        - /spec/livenessProbe
+        - /spec/readinessProbe
+        - /spec/startupProbe
+        - /spec/applicationName
+        - /spec/license/productEntitlementSource
 
   source:
     repoURL: https://github.com/jconover/nexusliberty.git

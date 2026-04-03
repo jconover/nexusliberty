@@ -5,8 +5,6 @@ metadata:
   namespace: liberty-apps
   labels:
     app.kubernetes.io/name: nexusliberty-app
-    app.kubernetes.io/version: "1.0.0"
-    app.kubernetes.io/part-of: nexusliberty-app
     app.kubernetes.io/component: backend
 spec:
   license:
@@ -15,11 +13,13 @@ spec:
   applicationImage: ghcr.io/jconover/nexusliberty-app:sha-9f301353c0a84b9343af46495b1557214959e2b1
   replicas: 2
   serviceAccountName: nexusliberty-sa
+  pullPolicy: IfNotPresent
   expose: true
   route:
     termination: edge
   service:
     port: 9080
+    type: ClusterIP
   affinity:
     podAntiAffinity:
       preferredDuringSchedulingIgnoredDuringExecution:
