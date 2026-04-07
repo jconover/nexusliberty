@@ -15,6 +15,22 @@ kind: ClusterRole
 metadata:
   name: argocd-liberty-crd-manager
 rules:
+  # Open Liberty Operator CRDs (apps.openliberty.io)
+  - apiGroups:
+      - apps.openliberty.io
+    resources:
+      - openlibertyapplications
+      - openlibertytraces
+      - openlibertydumps
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
+  # Legacy WebSphere Liberty Operator CRDs — retained for pruning old resources
   - apiGroups:
       - liberty.websphere.ibm.com
     resources:
@@ -25,9 +41,6 @@ rules:
       - get
       - list
       - watch
-      - create
-      - update
-      - patch
       - delete
 ---
 apiVersion: rbac.authorization.k8s.io/v1
