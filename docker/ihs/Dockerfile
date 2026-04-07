@@ -9,6 +9,9 @@ FROM docker.io/library/httpd:2.4-alpine
 RUN rm -f /usr/local/apache2/conf/httpd.conf
 COPY docker/ihs/httpd.conf /usr/local/apache2/conf/httpd.conf
 
+# Create health check endpoint file so /ihs-health returns 200
+RUN echo "OK" > /usr/local/apache2/htdocs/ihs-health
+
 # Validate config syntax at build time — catches typos before they reach the cluster
 RUN httpd -t -f /usr/local/apache2/conf/httpd.conf
 
