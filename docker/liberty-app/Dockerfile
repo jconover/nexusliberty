@@ -32,15 +32,13 @@ COPY --chown=1001:0 docker/liberty-app/hazelcast.xml /config/hazelcast.xml
 # and installs only those features into the runtime — keeping the image minimal.
 RUN features.sh
 
-# Download Hazelcast JARs for JCache session replication.
-# Versions pinned via ARGs for easy updates — bump here when upgrading.
+# Download Hazelcast JAR for JCache session replication.
+# Hazelcast 5.x includes Kubernetes discovery built-in — no separate
+# hazelcast-kubernetes plugin needed (that plugin is for Hazelcast 4.x).
 ARG HAZELCAST_VERSION=5.3.6
-ARG HAZELCAST_K8S_VERSION=2.2.3
 RUN mkdir -p /opt/ol/wlp/usr/shared/resources/hazelcast && \
     curl -fsSL -o /opt/ol/wlp/usr/shared/resources/hazelcast/hazelcast-${HAZELCAST_VERSION}.jar \
-      "https://repo1.maven.org/maven2/com/hazelcast/hazelcast/${HAZELCAST_VERSION}/hazelcast-${HAZELCAST_VERSION}.jar" && \
-    curl -fsSL -o /opt/ol/wlp/usr/shared/resources/hazelcast/hazelcast-kubernetes-${HAZELCAST_K8S_VERSION}.jar \
-      "https://repo1.maven.org/maven2/com/hazelcast/hazelcast-kubernetes/${HAZELCAST_K8S_VERSION}/hazelcast-kubernetes-${HAZELCAST_K8S_VERSION}.jar"
+      "https://repo1.maven.org/maven2/com/hazelcast/hazelcast/${HAZELCAST_VERSION}/hazelcast-${HAZELCAST_VERSION}.jar"
 
 # Copy the application WAR from the build stage
 COPY --chown=1001:0 --from=build /build/target/nexus-app.war /config/apps/nexus-app.war
