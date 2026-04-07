@@ -1,5 +1,5 @@
-apiVersion: liberty.websphere.ibm.com/v1
-kind: WebSphereLibertyApplication
+apiVersion: apps.openliberty.io/v1
+kind: OpenLibertyApplication
 metadata:
   name: nexusliberty-app
   namespace: liberty-apps

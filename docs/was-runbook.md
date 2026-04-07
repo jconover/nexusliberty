@@ -109,7 +109,7 @@ oc scale deployment nexusliberty-app --replicas=4 -n liberty-apps
 oc scale deployment nexusliberty-app --replicas=2 -n liberty-apps
 
 # Or edit the CR directly (preferred — operator manages lifecycle)
-oc edit WebSphereLibertyApplication nexusliberty-app -n liberty-apps
+oc edit OpenLibertyApplication nexusliberty-app -n liberty-apps
 # Change spec.replicas to desired count
 ```
 
@@ -258,7 +258,7 @@ oc describe pod nexusliberty-app-<hash> -n liberty-apps | grep -A5 "Events"
 # Common fixes:
 # Image pull error → verify GHCR credentials / image exists
 # SCC denied → oc adm policy add-scc-to-serviceaccount restricted-v2 -z nexusliberty-sa -n liberty-apps
-# OOMKilled → increase memory limits in WebSphereLibertyApplication CR
+# OOMKilled → increase memory limits in OpenLibertyApplication CR
 ```
 
 ### 6.2 Session Replication Not Working

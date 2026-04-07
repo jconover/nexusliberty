@@ -160,7 +160,7 @@ nexusliberty/
 │
 ├── openshift/                         # OpenShift deployment manifests
 │   ├── liberty-deployment/
-│   │   ├── WebSphereLibertyApplication.yaml  # Liberty Operator CR
+│   │   ├── WebSphereLibertyApplication.yaml  # Open Liberty Operator CR
 │   │   ├── rbac.yaml                  # ServiceAccount + Hazelcast RBAC
 │   │   ├── networkpolicy.yaml         # Ingress rules (IHS + Hazelcast + Prometheus)
 │   │   └── pdb.yaml                   # PodDisruptionBudget
@@ -276,7 +276,7 @@ nexusliberty/
 - [x] Write Dockerfile for Liberty + sample Java app
 - [x] Configure server.xml with features, datasources, endpoints
 - [x] Push image to GitHub Container Registry (GHCR)
-- [x] Deploy via WebSphereLibertyApplication CR on OKD
+- [x] Deploy via OpenLibertyApplication CR on OKD
 - [x] Expose via OpenShift Route
 - [x] Validate app accessible via Route URL
 
@@ -316,7 +316,7 @@ oc get clusterversion
 
 # Liberty workloads
 oc get pods -n liberty-apps
-oc get WebSphereLibertyApplication -n liberty-apps
+oc get OpenLibertyApplication -n liberty-apps
 oc get routes -n liberty-apps
 
 # Logs
