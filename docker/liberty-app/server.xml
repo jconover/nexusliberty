@@ -70,15 +70,11 @@
                  includes="*.jar"/>
     </library>
 
-    <cachingProvider id="HazelcastCachingProvider"
-                     jCacheLibraryRef="hazelcastLib"
-                     providerClass="com.hazelcast.cache.impl.HazelcastServerCachingProvider"/>
-
     <httpSessionCache cacheManagerRef="HazelcastCacheManager"/>
     <cacheManager id="HazelcastCacheManager"
-                  cachingProviderRef="HazelcastCachingProvider"
                   uri="file:${server.config.dir}/hazelcast.xml">
-        <library libraryRef="hazelcastLib"/>
+        <cachingProvider jCacheLibraryRef="hazelcastLib"
+                         providerClass="com.hazelcast.cache.impl.HazelcastServerCachingProvider"/>
     </cacheManager>
 
     <!-- ================================================================
