@@ -37,6 +37,12 @@
         </dependency>
         <!-- Test dependencies -->
         <dependency>
+            <groupId>io.smallrye</groupId>
+            <artifactId>smallrye-health</artifactId>
+            <version>4.1.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>io.rest-assured</groupId>
             <artifactId>rest-assured</artifactId>
             <version>5.4.0</version>
