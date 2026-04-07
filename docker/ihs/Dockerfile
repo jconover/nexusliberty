@@ -9,6 +9,9 @@ FROM docker.io/library/httpd:2.4-alpine
 RUN rm -f /usr/local/apache2/conf/httpd.conf
 COPY docker/ihs/httpd.conf /usr/local/apache2/conf/httpd.conf
 
+# Validate config syntax at build time — catches typos before they reach the cluster
+RUN httpd -t -f /usr/local/apache2/conf/httpd.conf
+
 # Ensure non-root user can write logs and pid file
 RUN chown -R 1001:0 /usr/local/apache2/logs && \
     chmod -R g=u /usr/local/apache2/logs
@@ -16,3 +19,6 @@ RUN chown -R 1001:0 /usr/local/apache2/logs && \
 EXPOSE 8080
 
 USER 1001
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD wget -qO- http://localhost:8080/ihs-health || exit 1

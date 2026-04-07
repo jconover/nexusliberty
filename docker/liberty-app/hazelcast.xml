@@ -25,7 +25,24 @@
         </join>
     </network>
 
-    <!-- Session cache map — tuned for HTTP sessions -->
+    <!--
+      Session cache maps — tuned for HTTP sessions.
+
+      backup-count=1: Each session is replicated to 1 other node. This gives
+      HA across single-node failure (with 2+ replicas). Set to 0 for no
+      replication (faster, no HA) or 2 for higher durability (more memory).
+
+      time-to-live-seconds=1800: Sessions expire after 30 min of inactivity,
+      matching the default Java EE session timeout.
+
+      max-size-policy=PER_NODE size=10000: Evict oldest sessions (LRU) when
+      a node holds more than 10,000 sessions. Adjust based on expected
+      concurrent users — each session consumes ~2-10 KB depending on payload.
+
+      RBAC requirement: Hazelcast Kubernetes discovery needs a ServiceAccount
+      with get/list permissions on pods. See openshift/liberty-deployment/rbac.yaml
+      for the required ServiceAccount and Role configuration.
+    -->
     <map name="com.ibm.ws.session.attr.*">
         <backup-count>1</backup-count>
         <time-to-live-seconds>1800</time-to-live-seconds>

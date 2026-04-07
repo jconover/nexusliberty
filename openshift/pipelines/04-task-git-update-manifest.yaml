@@ -15,6 +15,10 @@ spec:
       description: Path to the manifest file to update
       type: string
       default: openshift/liberty-deployment/WebSphereLibertyApplication.yaml
+    - name: git-repo-url
+      description: HTTPS URL of the Git repository to clone and push to
+      type: string
+      default: https://github.com/jconover/nexusliberty.git
     - name: git-user-name
       description: Git commit author name
       type: string
@@ -43,7 +47,7 @@ spec:
           git config --global credential.helper store
         fi
 
-        REPO_URL="https://github.com/jconover/nexusliberty.git"
+        REPO_URL="$(params.git-repo-url)"
         WORK_DIR="/tmp/nexusliberty"
 
         echo "Cloning repo for manifest update..."

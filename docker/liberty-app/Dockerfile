@@ -27,21 +27,26 @@ COPY --chown=1001:0 docker/liberty-app/server.xml /config/server.xml
 # Copy Hazelcast session cache config
 COPY --chown=1001:0 docker/liberty-app/hazelcast.xml /config/hazelcast.xml
 
-# Install only the Liberty features declared in server.xml
+# features.sh is an Open Liberty base image script that reads server.xml,
+# resolves the declared features (webProfile, microProfile, sessionCache),
+# and installs only those features into the runtime — keeping the image minimal.
 RUN features.sh
 
-# Download Hazelcast JARs for JCache session replication
+# Download Hazelcast JARs for JCache session replication.
+# Versions pinned via ARGs for easy updates — bump here when upgrading.
 ARG HAZELCAST_VERSION=5.3.6
+ARG HAZELCAST_K8S_VERSION=2.2.3
 RUN mkdir -p /opt/ol/wlp/usr/shared/resources/hazelcast && \
     curl -fsSL -o /opt/ol/wlp/usr/shared/resources/hazelcast/hazelcast-${HAZELCAST_VERSION}.jar \
       "https://repo1.maven.org/maven2/com/hazelcast/hazelcast/${HAZELCAST_VERSION}/hazelcast-${HAZELCAST_VERSION}.jar" && \
-    curl -fsSL -o /opt/ol/wlp/usr/shared/resources/hazelcast/hazelcast-kubernetes-2.2.3.jar \
-      "https://repo1.maven.org/maven2/com/hazelcast/hazelcast-kubernetes/2.2.3/hazelcast-kubernetes-2.2.3.jar"
+    curl -fsSL -o /opt/ol/wlp/usr/shared/resources/hazelcast/hazelcast-kubernetes-${HAZELCAST_K8S_VERSION}.jar \
+      "https://repo1.maven.org/maven2/com/hazelcast/hazelcast-kubernetes/${HAZELCAST_K8S_VERSION}/hazelcast-kubernetes-${HAZELCAST_K8S_VERSION}.jar"
 
 # Copy the application WAR from the build stage
 COPY --chown=1001:0 --from=build /build/target/nexus-app.war /config/apps/nexus-app.war
 
-# Finalize and optimize the image (sets up keystore, validates config, etc.)
+# configure.sh is an Open Liberty base image script that validates server.xml,
+# generates the default TLS keystore, and optimizes the server for container use.
 RUN configure.sh
 
 # Open Liberty runs as non-root by default (uid 1001 / group root)

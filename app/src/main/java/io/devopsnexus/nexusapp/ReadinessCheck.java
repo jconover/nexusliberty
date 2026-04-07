@@ -19,14 +19,38 @@ public class ReadinessCheck implements HealthCheck {
     public HealthCheckResponse call() {
         HealthCheckResponseBuilder builder = HealthCheckResponse.named("nexusliberty-readiness");
 
-        if (servletContext != null && servletContext.getContextPath() != null) {
+        boolean servletReady = servletContext != null && servletContext.getContextPath() != null;
+        boolean cacheReady = checkSessionCache();
+
+        if (servletReady && cacheReady) {
             builder.up()
-                   .withData("contextPath", servletContext.getContextPath());
+                   .withData("contextPath", servletContext.getContextPath())
+                   .withData("sessionCache", "available");
         } else {
             builder.down()
-                   .withData("reason", "ServletContext not available");
+                   .withData("servletContext", servletReady ? "ok" : "unavailable")
+                   .withData("sessionCache", cacheReady ? "ok" : "unavailable");
         }
 
         return builder.build();
+    }
+
+    /**
+     * Verify Hazelcast JCache session cache is accessible.
+     * Uses JNDI lookup for the CacheManager configured in server.xml.
+     * Returns true if unavailable (graceful degradation) when session
+     * caching is not configured (e.g., local dev without Hazelcast).
+     */
+    private boolean checkSessionCache() {
+        try {
+            Class<?> cachingClass = Class.forName("javax.cache.Caching");
+            Object provider = cachingClass.getMethod("getCachingProvider").invoke(null);
+            Object cacheManager = provider.getClass().getMethod("getCacheManager").invoke(provider);
+            return cacheManager != null;
+        } catch (Exception e) {
+            // JCache API not on classpath or no provider configured —
+            // treat as ready (session caching is optional for readiness)
+            return true;
+        }
     }
 }

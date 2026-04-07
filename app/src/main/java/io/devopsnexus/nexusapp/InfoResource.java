@@ -30,4 +30,3 @@ public class InfoResource {
         );
     }
 }
-// e2e pipeline test

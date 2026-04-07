@@ -7,3 +7,12 @@ report.html
 
 app/target/
 openshift/pipelines/03-secrets.yaml
+
+# Security-sensitive files — never commit credentials or keys
+.env*
+*.key
+*.pem
+*.p12
+*.jks
+*-secrets.yaml
+!*-secrets.yaml.example

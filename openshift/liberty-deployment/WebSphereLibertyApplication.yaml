@@ -7,10 +7,17 @@ metadata:
     app.kubernetes.io/name: nexusliberty-app
     app.kubernetes.io/component: backend
 spec:
+  # License: Open Liberty (free, open-source upstream of WebSphere Liberty).
+  # No commercial license required for portfolio/dev use.
   license:
     accept: true
-    edition: IBM WebSphere Application Server
+    edition: Open
+  # Image tag is updated automatically by Tekton pipeline (04-task-git-update-manifest)
+  # and by the GitHub Actions liberty-build workflow via sed + commit to main.
+  # Argo CD detects the manifest change and syncs the new image to the cluster.
   applicationImage: ghcr.io/jconover/nexusliberty-app:sha-9f301353c0a84b9343af46495b1557214959e2b1
+  # 2 replicas for HA — pod anti-affinity below spreads them across nodes.
+  # Scale up to 3 for full node coverage on the 3-node homelab cluster.
   replicas: 2
   serviceAccountName: nexusliberty-sa
   pullPolicy: IfNotPresent
@@ -20,6 +27,8 @@ spec:
   service:
     port: 9080
     type: ClusterIP
+  # Spread pods across nodes to survive single-node failure.
+  # preferredDuringScheduling = best-effort, won't block scheduling if only 1 node available.
   affinity:
     podAntiAffinity:
       preferredDuringSchedulingIgnoredDuringExecution:
@@ -29,13 +38,16 @@ spec:
               matchLabels:
                 app.kubernetes.io/name: nexusliberty-app
             topologyKey: kubernetes.io/hostname
+  # Resource sizing: OpenJ9 JVM + Hazelcast embedded member + application.
+  # Requests: baseline for scheduler placement. Limits: OOMKill ceiling.
+  # 768Mi accommodates ~256Mi max heap + Hazelcast + JVM metaspace + native memory.
   resources:
     requests:
       cpu: 200m
-      memory: 256Mi
+      memory: 384Mi
     limits:
       cpu: 500m
-      memory: 512Mi
+      memory: 768Mi
   readinessProbe:
     httpGet:
       path: /health/ready
@@ -48,6 +60,8 @@ spec:
       port: 9080
     initialDelaySeconds: 60
     periodSeconds: 30
+  # Startup probe: gives Liberty up to 5 min (30 x 10s) to start before liveness kicks in.
+  # Prevents liveness from killing slow-starting JVMs during initial class loading.
   startupProbe:
     httpGet:
       path: /health/live

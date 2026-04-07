@@ -5,8 +5,16 @@
   ansible.builtin.shell: |
     set -e
     {{ was_profile_path }}/bin/stopManager.sh
-    sleep 2
     {{ was_profile_path }}/bin/startManager.sh
   become: true
   become_user: "{{ was_user }}"
-  changed_when: true
+  changed_when: false
+  notify: Wait for dmgr port
+
+- name: Wait for dmgr port
+  ansible.builtin.wait_for:
+    port: "{{ dmgr_soap_port | default(8879) }}"
+    host: "{{ inventory_hostname }}"
+    delay: 2
+    timeout: 60
+    state: started
