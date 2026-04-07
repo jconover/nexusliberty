@@ -69,7 +69,7 @@ oc logs -l app.kubernetes.io/name=nexusliberty-app -n liberty-apps | grep -i "Me
 # Test session failover:
 # 1. Create a session via the app
 # 2. Delete one pod
-oc delete pod $(oc get pods -n liberty-apps -l app.kubernetes.io/name=nexusliberty-app -o name | head -1) -n liberty-apps
+oc delete $(oc get pods -n liberty-apps -l app.kubernetes.io/name=nexusliberty-app -o name | head -1) -n liberty-apps
 # 3. Verify session persists on the remaining pod
 ```
 
