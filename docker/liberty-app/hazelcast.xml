@@ -16,11 +16,15 @@
             <!-- Disable multicast — not available in container networks -->
             <multicast enabled="false"/>
 
-            <!-- Kubernetes API discovery: finds pods by label selector -->
+            <!-- Kubernetes API discovery: finds pods by label selector.
+                 service-port must be set to the Hazelcast member port (5701),
+                 otherwise discovery defaults to the K8s Service port (9080)
+                 and members get "Unknown protocol: HTT" errors. -->
             <kubernetes enabled="true">
                 <namespace>liberty-apps</namespace>
                 <service-label-name>app.kubernetes.io/name</service-label-name>
                 <service-label-value>nexusliberty-app</service-label-value>
+                <service-port>5701</service-port>
             </kubernetes>
         </join>
     </network>
