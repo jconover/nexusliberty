@@ -6,7 +6,7 @@ Step-by-step guide to configuring high availability, load balancing, and observa
 
 - Phase 1-4 complete (OKD cluster running, Liberty deployed, CI/CD pipeline active)
 - `oc` CLI installed and authenticated to the OKD cluster
-- Liberty app deployed via WebSphereLibertyApplication CR in `liberty-apps` namespace
+- Liberty app deployed via OpenLibertyApplication CR in `liberty-apps` namespace
 
 ## What We're Building
 
@@ -51,7 +51,7 @@ oc auth can-i list pods --as=system:serviceaccount:liberty-apps:nexusliberty-sa 
 ### 1.2 Deploy Updated Liberty CR (2 Replicas)
 
 ```bash
-# Apply the updated WebSphereLibertyApplication (replicas: 2, serviceAccountName added)
+# Apply the updated OpenLibertyApplication (replicas: 2, serviceAccountName added)
 oc apply -f openshift/liberty-deployment/WebSphereLibertyApplication.yaml
 
 # Watch pods come up

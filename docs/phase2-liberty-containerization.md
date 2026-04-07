@@ -29,7 +29,7 @@ Step-by-step guide to build a custom Open Liberty container image, push to GitHu
    ghcr.io/jconover/nexusliberty-app:latest
          │
          ▼
-   WebSphereLibertyApplication CR → OKD Pod → Route
+   OpenLibertyApplication CR → OKD Pod → Route
 ```
 
 ## Project Structure (Phase 2 files)
@@ -54,7 +54,7 @@ nexusliberty/
 ├── .github/workflows/
 │   └── liberty-build.yml                # CI: build + push to GHCR
 └── openshift/liberty-deployment/
-    └── WebSphereLibertyApplication.yaml # Updated: points to GHCR image
+    └── WebSphereLibertyApplication.yaml # OpenLibertyApplication CR: points to GHCR image
 ```
 
 ## Step 1: Review the Application
@@ -164,12 +164,12 @@ oc secrets link default ghcr-pull-secret --for=pull -n liberty-apps
 ### Delete the Phase 1 Sample App (if still running)
 
 ```bash
-oc delete WebSphereLibertyApplication nexusliberty-sample -n liberty-apps 2>/dev/null || true
+oc delete OpenLibertyApplication nexusliberty-sample -n liberty-apps 2>/dev/null || true
 ```
 
 ### Apply the Updated CR
 
-The `WebSphereLibertyApplication.yaml` now points to `ghcr.io/jconover/nexusliberty-app:latest` with resource limits for homelab sizing.
+The `WebSphereLibertyApplication.yaml` contains the OpenLibertyApplication CR pointing to `ghcr.io/jconover/nexusliberty-app:latest` with resource limits for homelab sizing.
 
 ```bash
 oc apply -f openshift/liberty-deployment/WebSphereLibertyApplication.yaml
@@ -226,7 +226,7 @@ curl -k https://nexusliberty-app-liberty-apps.apps.nexuslab.nexuslab.local/healt
 
 ```bash
 echo "=== Liberty App CR ==="
-oc get WebSphereLibertyApplication -n liberty-apps
+oc get OpenLibertyApplication -n liberty-apps
 
 echo ""
 echo "=== Pods ==="
@@ -286,7 +286,7 @@ oc rollout status deployment/nexusliberty-app -n liberty-apps
 **Homelab users:** You can leave it running — there's no cloud cost. However, if you need to free resources for other workloads, delete and re-apply when ready.
 
 ```bash
-oc delete -f openshift/liberty-deployment/WebSphereLibertyApplication.yaml
+oc delete -f openshift/liberty-deployment/WebSphereLibertyApplication.yaml   # contains OpenLibertyApplication CR
 ```
 
 ## What's Next (Phase 3)

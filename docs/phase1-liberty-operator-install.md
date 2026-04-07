@@ -1,6 +1,6 @@
-# Phase 1: WebSphere Liberty Operator Install + Sample App
+# Phase 1: Open Liberty Operator Install + Sample App
 
-Step-by-step guide to install the IBM WebSphere Liberty Operator on OKD and deploy a sample app.
+Step-by-step guide to install the Open Liberty Operator on OKD and deploy a sample app.
 
 ## Prerequisites
 
@@ -96,33 +96,9 @@ Verify:
 oc get namespace liberty-apps
 ```
 
-## Step 2: Add IBM Operator Catalog
+## Step 2: Install the Open Liberty Operator
 
-OKD doesn't include IBM's certified operator catalog by default (commercial OpenShift does). This adds it to OLM.
-
-```bash
-oc apply -f cluster/operators/ibm-operator-catalog.yaml
-```
-
-Wait for the catalog pod to be running (~2-3 minutes):
-```bash
-oc get pods -n openshift-marketplace | grep ibm
-```
-
-You should see something like:
-```
-ibm-operator-catalog-xxxxx   1/1   Running   0   2m
-```
-
-**Troubleshooting:** If the pod is stuck in `ImagePullBackOff`:
-```bash
-oc get events -n openshift-marketplace --sort-by='.lastTimestamp' | grep ibm
-```
-This usually means a network/DNS issue pulling `icr.io/cpopen/ibm-operator-catalog`. Verify your nodes can reach `icr.io`.
-
-## Step 3: Install the Liberty Operator
-
-This creates an OperatorGroup (scopes to liberty-apps) and a Subscription (triggers OLM to install the operator).
+This creates an OperatorGroup (scopes to liberty-apps) and a Subscription (triggers OLM to install the operator from the certified-operators catalog).
 
 ```bash
 oc apply -f cluster/operators/websphere-liberty-operator.yaml
@@ -135,8 +111,8 @@ oc get csv -n liberty-apps -w
 
 Expected output:
 ```
-NAME                          DISPLAY                    VERSION   PHASE
-ibm-websphere-liberty.v1.3.x  IBM WebSphere Liberty      1.3.x     Succeeded
+NAME                            DISPLAY          VERSION   PHASE
+open-liberty-operator.v1.4.x    Open Liberty     1.4.x     Succeeded
 ```
 
 Verify the operator pod is running:
@@ -147,11 +123,11 @@ oc get pods -n liberty-apps
 **Troubleshooting:** If CSV stays in `Pending` or `InstallReady`:
 ```bash
 # Check if the channel exists in the catalog
-oc get packagemanifest ibm-websphere-liberty -n openshift-marketplace -o jsonpath='{.status.channels[*].name}'
+oc get packagemanifest open-liberty-certified -n openshift-marketplace -o jsonpath='{.status.channels[*].name}'
 ```
-If `v1.3` isn't listed, update the `channel` field in `cluster/operators/websphere-liberty-operator.yaml` to match what's available, then re-apply.
+If `v1.4` isn't listed, update the `channel` field in `cluster/operators/websphere-liberty-operator.yaml` to match what's available, then re-apply.
 
-## Step 4: Deploy the Sample App
+## Step 3: Deploy the Sample App
 
 This uses IBM's official Open Liberty getting-started sample image — no container build needed.
 
@@ -166,7 +142,7 @@ oc get pods -n liberty-apps -w
 
 Wait for `1/1 Running` status. First pull may take a few minutes.
 
-## Step 5: Verify the Route
+## Step 4: Verify the Route
 
 The Liberty Operator automatically creates a Route when `expose: true` is set.
 
@@ -200,7 +176,7 @@ curl -k https://nexusliberty-sample-liberty-apps.apps.nexuslab.nexuslab.local/he
 
 Both should return `{"status":"UP",...}`.
 
-## Step 6: Validate Everything
+## Step 5: Validate Everything
 
 Run this checklist to confirm Phase 1 completion:
 
@@ -209,16 +185,12 @@ echo "=== Cluster Operators ==="
 oc get clusteroperators | grep -v "True.*False.*False" || echo "All healthy"
 
 echo ""
-echo "=== IBM Catalog ==="
-oc get catalogsource ibm-operator-catalog -n openshift-marketplace
-
-echo ""
 echo "=== Liberty Operator CSV ==="
 oc get csv -n liberty-apps
 
 echo ""
 echo "=== Liberty App ==="
-oc get WebSphereLibertyApplication -n liberty-apps
+oc get OpenLibertyApplication -n liberty-apps
 
 echo ""
 echo "=== Pods ==="
@@ -235,7 +207,6 @@ To tear down and start over:
 ```bash
 oc delete -f openshift/liberty-deployment/WebSphereLibertyApplication.yaml
 oc delete -f cluster/operators/websphere-liberty-operator.yaml
-oc delete -f cluster/operators/ibm-operator-catalog.yaml
 oc delete -f cluster/namespace/liberty-apps.yaml
 ```
 
@@ -245,4 +216,4 @@ Once this works end-to-end, Phase 2 replaces the sample image with our own:
 - Write a Dockerfile for Liberty + custom Java app
 - Configure server.xml
 - Push to GHCR (`ghcr.io/jconover/nexusliberty-app`)
-- Update the WebSphereLibertyApplication CR to point to our image
+- Update the OpenLibertyApplication CR to point to our image

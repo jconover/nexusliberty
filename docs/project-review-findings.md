@@ -147,7 +147,7 @@ The CLAUDE.md repo structure tree is wrong in **15+ places**. This is the highes
 5. **No ResourceQuota or LimitRange** — unbounded resource consumption possible
 6. **Argo CD Application only syncs `openshift/liberty-deployment/`** — IHS and monitoring manifests are unmanaged
 7. **`app.kubernetes.io/version` label missing from every resource**
-8. **WebSphereLibertyApplication CR has no labels on its own metadata** — breaks label-selector consistency
+8. **OpenLibertyApplication CR has no labels on its own metadata** — breaks label-selector consistency
 9. **IHS Deployment has `replicas: 1`** — load balancer is itself a SPOF
 10. **ServiceMonitor selector may not match operator-generated Service** — depends on operator version label behavior
 11. **ServiceMonitor references port name `http`** — ambiguous which Service it matches

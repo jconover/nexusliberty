@@ -14,13 +14,13 @@ metadata:
 spec:
   project: default
 
-  # The Liberty Operator mutates the WLA CR after Argo CD applies it:
+  # The Liberty Operator mutates the OLA CR after Argo CD applies it:
   # - Strips probes from the CR (applies them to the Deployment instead)
   # - Injects defaults (applicationName, productEntitlementSource)
   # Ignore these operator-managed fields to prevent an OutOfSync loop.
   ignoreDifferences:
-    - group: liberty.websphere.ibm.com
-      kind: WebSphereLibertyApplication
+    - group: apps.openliberty.io
+      kind: OpenLibertyApplication
       jsonPointers:
         - /spec/livenessProbe
         - /spec/readinessProbe
