@@ -1,11 +1,15 @@
 ---
 # was-nodeagent/tasks/main.yml — Create AppSrv profile, federate to Dmgr, start node agent
 
-- name: Set profile name based on inventory index
+# Node index derived from hostvars instead of runtime group ordering.
+# Each host should define 'node_index' in inventory (e.g., host_vars or hosts.ini).
+# Fallback: uses the loop index from the was_nodes group, but hostvars is preferred
+# because group ordering can change if hosts are added/removed from inventory.
+- name: Set profile name based on node index
   ansible.builtin.set_fact:
-    was_profile_name: "AppSrv0{{ groups['was_nodes'].index(inventory_hostname) + 1 }}"
+    was_profile_name: "AppSrv0{{ hostvars[inventory_hostname].node_index | default(groups['was_nodes'].index(inventory_hostname) + 1) }}"
     was_node_name: "{{ inventory_hostname }}Node"
-    was_server_name: "AppServer{{ groups['was_nodes'].index(inventory_hostname) + 1 }}"
+    was_server_name: "AppServer{{ hostvars[inventory_hostname].node_index | default(groups['was_nodes'].index(inventory_hostname) + 1) }}"
 
 - name: Set profile path
   ansible.builtin.set_fact:

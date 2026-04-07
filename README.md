@@ -215,7 +215,7 @@ nexusliberty/
 │   ├── liberty-app/                       # Liberty container image
 │   │   ├── Dockerfile                     # Multi-stage Maven build → Open Liberty
 │   │   ├── server.xml                     # Liberty server config
-│   │   └── hazelcast-client.xml           # Hazelcast K8s discovery config
+│   │   └── hazelcast.xml                  # Hazelcast embedded member config (K8s API discovery)
 │   └── ihs/                               # IHS (Apache HTTPD) load balancer
 │       ├── Dockerfile
 │       └── httpd.conf                     # Reverse proxy + load balancing

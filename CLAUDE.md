@@ -121,31 +121,49 @@ api.<cluster>.<domain>         192.168.68.100   (API VIP)
 nexusliberty/
 ├── CLAUDE.md                          # This file — Claude Code project context
 ├── README.md                          # Project overview and architecture
+├── LICENSE                            # MIT license
 │
 ├── app/                               # Jakarta EE application
-│   ├── pom.xml                        # Maven build (Open Liberty runtime)
-│   └── src/main/
-│       ├── java/io/devopsnexus/nexusapp/
-│       │   ├── NexusApplication.java  # JAX-RS application root
-│       │   ├── HealthResource.java    # /api/health endpoint
-│       │   ├── InfoResource.java      # /api/info endpoint
-│       │   ├── LivenessCheck.java     # MicroProfile liveness probe
-│       │   └── ReadinessCheck.java    # MicroProfile readiness probe
-│       └── webapp/index.html          # Landing page
+│   ├── README.md                      # App endpoints, build, and run instructions
+│   ├── pom.xml                        # Maven build (Open Liberty runtime + surefire/failsafe)
+│   └── src/
+│       ├── main/
+│       │   ├── java/io/devopsnexus/nexusapp/
+│       │   │   ├── NexusApplication.java  # JAX-RS application root
+│       │   │   ├── HealthResource.java    # /api/health endpoint
+│       │   │   ├── InfoResource.java      # /api/info endpoint
+│       │   │   ├── LivenessCheck.java     # MicroProfile liveness probe (deadlock + heap)
+│       │   │   └── ReadinessCheck.java    # MicroProfile readiness probe (servlet + JCache)
+│       │   ├── resources/META-INF/
+│       │   │   └── microprofile-config.properties
+│       │   └── webapp/index.html          # Landing page
+│       └── test/
+│           ├── java/io/devopsnexus/nexusapp/
+│           │   ├── EndpointIT.java        # REST Assured integration tests
+│           │   ├── HealthResourceTest.java    # Unit tests
+│           │   ├── InfoResourceTest.java      # Unit tests
+│           │   ├── LivenessCheckTest.java     # Unit tests
+│           │   └── ReadinessCheckTest.java    # Unit tests
+│           └── liberty/config/
+│               └── server.xml             # Lightweight test server config
 │
 ├── docker/                            # Container builds
 │   ├── liberty-app/
 │   │   ├── Dockerfile                 # Multi-stage: Maven build → Open Liberty runtime
 │   │   ├── server.xml                 # Liberty server config (webProfile + microProfile + sessionCache)
-│   │   └── hazelcast-client.xml       # Hazelcast embedded member config (K8s discovery)
-│   └── ihs/
-│       ├── Dockerfile                 # Apache HTTPD 2.4 (IHS stand-in)
-│       └── httpd.conf                 # Reverse proxy + load balancing config
+│   │   └── hazelcast.xml             # Hazelcast embedded member config (K8s API discovery)
+│   ├── ihs/
+│   │   ├── Dockerfile                 # Apache HTTPD 2.4 (IHS stand-in) with HEALTHCHECK
+│   │   └── httpd.conf                 # Reverse proxy + load balancing config
+│   └── github-runner/
+│       └── Dockerfile                 # Self-hosted GitHub Actions runner for OKD
 │
 ├── openshift/                         # OpenShift deployment manifests
 │   ├── liberty-deployment/
 │   │   ├── WebSphereLibertyApplication.yaml  # Liberty Operator CR
-│   │   └── rbac.yaml                  # ServiceAccount + Hazelcast RBAC
+│   │   ├── rbac.yaml                  # ServiceAccount + Hazelcast RBAC
+│   │   ├── networkpolicy.yaml         # Ingress rules (IHS + Hazelcast + Prometheus)
+│   │   └── pdb.yaml                   # PodDisruptionBudget
 │   ├── ihs-deployment/
 │   │   ├── deployment.yaml            # IHS (Apache) load balancer
 │   │   ├── service.yaml
@@ -154,14 +172,23 @@ nexusliberty/
 │   │   ├── servicemonitor.yaml        # Prometheus scraping for Liberty
 │   │   ├── prometheusrule.yaml        # Alert rules (pod down, high latency, errors)
 │   │   ├── grafana-dashboard.yaml     # JVM + request metrics dashboard
+│   │   ├── resourcequota.yaml         # Namespace resource limits
 │   │   └── cluster-monitoring-config.yaml  # Enable user workload monitoring
-│   └── pipelines/                     # Tekton CI pipeline
-│       ├── 01-rbac.yaml               # ServiceAccount + permissions
-│       ├── 02-pvc.yaml                # Shared workspace PVC
-│       ├── 03-secrets.yaml.example    # GHCR + Git credentials (template)
-│       ├── 04-task-git-update-manifest.yaml  # Custom task: commit image tag
-│       ├── 05-pipeline.yaml           # Liberty build pipeline
-│       └── 06-pipelinerun-template.yaml
+│   ├── pipelines/                     # Tekton CI pipeline
+│   │   ├── 01-rbac.yaml               # ServiceAccount + permissions
+│   │   ├── 02-pvc.yaml                # Shared workspace PVC
+│   │   ├── 03-secrets.yaml.example    # GHCR + Git credentials (template — real file in .gitignore)
+│   │   ├── 04-task-git-update-manifest.yaml  # Custom task: commit image tag
+│   │   ├── 05-pipeline.yaml           # Liberty build pipeline
+│   │   └── 06-pipelinerun-template.yaml
+│   └── github-runner/                 # Self-hosted runner infrastructure
+│       ├── namespace.yaml
+│       ├── serviceaccount.yaml
+│       ├── rbac.yaml
+│       ├── scc.yaml                   # SecurityContextConstraints
+│       ├── scc-clusterrole.yaml
+│       ├── arc-values.yaml            # Actions Runner Controller Helm values
+│       └── setup.sh                   # Runner bootstrap script
 │
 ├── cluster/                           # OKD cluster-level configuration
 │   ├── namespace/
@@ -173,13 +200,15 @@ nexusliberty/
 │   │   └── builds-for-openshift-subscription.yaml
 │   ├── gitops/
 │   │   ├── argocd-nexusliberty-app.yaml    # Argo CD Application CR
-│   │   ├── argocd-rbac.yaml                # Argo CD RBAC for Liberty CRDs
+│   │   ├── argocd-rbac.yaml                # Argo CD RBAC (CRDs cluster-scoped, core resources namespace-scoped)
 │   │   └── openshift-gitops-subscription.yaml
 │   └── oauth/
-│       └── htpasswd-oauth.yaml
+│       └── htpasswd-oauth.yaml        # HTPasswd identity provider (dev/homelab only)
 │
 ├── ansible/                           # Ansible automation (WAS ND simulation)
 │   ├── ansible.cfg
+│   ├── requirements.yml               # Ansible Galaxy collection dependencies
+│   ├── requirements-lint.txt          # Pinned ansible-lint version for CI
 │   ├── inventory/
 │   │   ├── hosts.ini                  # WAS/IHS node inventory
 │   │   └── group_vars/
@@ -210,18 +239,20 @@ nexusliberty/
 │   └── provision/
 │       ├── bootstrap.sh               # Common OS setup for all nodes
 │       ├── setup-dmgr.sh             # Deployment Manager provisioning
+│       ├── setup-was-node.sh          # Shared managed node setup
 │       ├── setup-was1.sh             # Managed node 1
 │       ├── setup-was2.sh             # Managed node 2
 │       └── setup-ihs.sh             # IHS provisioning
 │
 ├── docs/                              # Phase walkthrough guides
+│   ├── index.md                       # Documentation index
+│   ├── prerequisites.md               # Environment setup prerequisites
 │   ├── phase1-liberty-operator-install.md
 │   ├── phase2-liberty-containerization.md
 │   ├── phase3-ansible-was-automation.md
 │   ├── phase4-cicd-argocd.md
 │   ├── phase5-ha-operations.md
 │   ├── was-runbook.md                 # WAS operational procedures
-│   ├── prerequisites.md               # Environment setup prerequisites
 │   └── project-review-findings.md     # Architecture review findings
 │
 └── .github/workflows/
@@ -312,7 +343,7 @@ Rather than embedding stale copies, refer to the actual files:
 | Purpose | File |
 |---|---|
 | Liberty server config | `docker/liberty-app/server.xml` |
-| Hazelcast session clustering | `docker/liberty-app/hazelcast-client.xml` |
+| Hazelcast session clustering | `docker/liberty-app/hazelcast.xml` |
 | Liberty Operator CR | `openshift/liberty-deployment/WebSphereLibertyApplication.yaml` |
 | IHS load balancer config | `docker/ihs/httpd.conf` |
 | Prometheus monitoring | `openshift/monitoring/servicemonitor.yaml` |

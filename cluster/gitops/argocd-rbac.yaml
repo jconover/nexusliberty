@@ -1,12 +1,19 @@
 ---
-# Grant the Argo CD service account permission to manage
-# WebSphereLibertyApplication resources in liberty-apps namespace.
-# The OpenShift GitOps operator creates the SA in openshift-gitops.
+# RBAC for Argo CD to manage NexusLiberty resources.
+# Split into two layers:
+#   1. ClusterRole + ClusterRoleBinding — Liberty CRDs are cluster-scoped custom
+#      resources; Argo CD needs cluster-level access to manage them.
+#   2. Role + RoleBinding in liberty-apps — core K8s resources (secrets, configmaps,
+#      etc.) are scoped to the target namespace only. This follows least-privilege:
+#      Argo CD cannot read or delete secrets in other namespaces.
+#
+# The OpenShift GitOps operator creates the SA in openshift-gitops namespace.
 
+# --- Layer 1: Cluster-scoped access for Liberty Operator CRDs ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: argocd-liberty-operator-manager
+  name: argocd-liberty-crd-manager
 rules:
   - apiGroups:
       - liberty.websphere.ibm.com
@@ -22,6 +29,27 @@ rules:
       - update
       - patch
       - delete
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: argocd-liberty-crd-manager-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: argocd-liberty-crd-manager
+subjects:
+  - kind: ServiceAccount
+    name: openshift-gitops-argocd-application-controller
+    namespace: openshift-gitops
+---
+# --- Layer 2: Namespace-scoped access for core K8s resources in liberty-apps ---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: argocd-liberty-ns-manager
+  namespace: liberty-apps
+rules:
   - apiGroups:
       - ""
     resources:
@@ -76,13 +104,14 @@ rules:
       - delete
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
+kind: RoleBinding
 metadata:
-  name: argocd-liberty-operator-manager-binding
+  name: argocd-liberty-ns-manager-binding
+  namespace: liberty-apps
 roleRef:
   apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: argocd-liberty-operator-manager
+  kind: Role
+  name: argocd-liberty-ns-manager
 subjects:
   - kind: ServiceAccount
     name: openshift-gitops-argocd-application-controller

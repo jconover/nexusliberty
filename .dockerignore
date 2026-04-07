@@ -2,8 +2,6 @@
 docs/
 vagrant/
 ansible/
-openshift/
-scripts/
 cluster/
 .github/
 .omc/
@@ -11,3 +9,5 @@ node_modules/
 *.md
 .env*
 *.log
+*.key
+*.pem
