@@ -20,9 +20,12 @@ Follow the phases in order for the full modernization journey:
 
 | Document | Description |
 |----------|-------------|
+| [Migration Timeline](migration-timeline.md) | How the WAS-to-Liberty migration works phase by phase |
+| [OpenShift vs Vagrant SSH](openshift-vs-vagrant-ssh.md) | When to use SSH vs `oc` commands for each environment |
+| [Liberty Container Diagnostics](liberty-container-diagnostics.md) | JVM diagnostics, thread dumps, heap analysis inside OpenShift pods |
 | [WAS Operational Runbook](was-runbook.md) | Day-to-day operations for both WAS ND and Liberty on OKD |
 | [Prerequisites](prerequisites.md) | Tools and dependencies needed to work with the project |
-| [Project Review Findings](project-review-findings.md) | Architecture review findings and improvement roadmap |
+| [Comprehensive Review Findings](comprehensive-review-findings.md) | Full project audit with severity-rated findings and action items |
 
 ## Quick Links
 
