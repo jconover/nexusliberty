@@ -18,6 +18,7 @@ spec:
     - name: git-repo-url
       description: HTTPS URL of the Git repository to clone and push to
       type: string
+      # Default for this project — override via PipelineRun params for forks or mirrors
       default: https://github.com/jconover/nexusliberty.git
     - name: git-user-name
       description: Git commit author name

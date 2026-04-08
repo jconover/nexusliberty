@@ -1,7 +1,12 @@
 ---
 # ServiceMonitor — instructs OKD's built-in Prometheus to scrape
 # MicroProfile Metrics from Liberty pods at /metrics.
-# Requires user workload monitoring to be enabled on the cluster.
+# Requires user workload monitoring to be enabled on the cluster
+# (see cluster-monitoring-config.yaml).
+#
+# The /metrics endpoint is exposed by Liberty's mpMetrics-5.1 feature
+# configured in docker/liberty-app/server.xml. Authentication is disabled
+# via <mpMetrics authentication="false"/> so Prometheus can scrape without credentials.
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:

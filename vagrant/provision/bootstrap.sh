@@ -6,7 +6,7 @@ set -euo pipefail
 echo ">>> NexusLiberty WAS ND Simulation — Bootstrap"
 
 # Ensure Python 3 is available (Ansible requirement)
-dnf install -y python3 python3-pip python3-libselinux 2>/dev/null || true
+dnf install -y python3 python3-pip python3-libselinux || echo "WARNING: Python prerequisite install had errors — continuing"
 
 # Common packages used by WAS/IHS administration
 dnf install -y \
@@ -14,7 +14,7 @@ dnf install -y \
   unzip tar wget curl \
   net-tools bind-utils \
   firewalld \
-  2>/dev/null || true
+  || echo "WARNING: Common package install had errors — continuing"
 
 # Enable and start firewalld (WAS environments use strict firewall rules)
 systemctl enable --now firewalld

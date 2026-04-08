@@ -247,3 +247,7 @@ All five phases are complete. The NexusLiberty platform now demonstrates the ful
 For operational procedures, see the [WAS Operational Runbook](was-runbook.md).
 
 Back to the [project README](../README.md) for the full project overview.
+
+---
+
+← [Previous: Phase 4 — CI/CD Pipeline](phase4-cicd-argocd.md) | [Project README](../README.md) →

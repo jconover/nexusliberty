@@ -1,0 +1,18 @@
+# .ansible-lint — NexusLiberty Ansible linting configuration
+# Docs: https://ansible.readthedocs.io/projects/lint/configuring/
+
+skip_list:
+  # Simulation uses shell/command for wsadmin scripts and mock operations
+  - command-instead-of-module
+  # No galaxy metadata needed for local-only roles
+  - galaxy[no-runtime]
+  - meta-no-info
+
+warn_list:
+  - no-changed-when
+  - yaml[line-length]
+  - name[missing]
+
+exclude_paths:
+  - .git/
+  - .omc/

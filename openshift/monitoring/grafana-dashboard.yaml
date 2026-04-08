@@ -1,7 +1,15 @@
 ---
 # Grafana Dashboard ConfigMap — Liberty JVM & Request Metrics
-# Import via Grafana UI (Dashboards → Import → paste JSON) or mount
-# as a ConfigMap if using the Grafana Operator with dashboard discovery.
+#
+# To import manually:
+#   1. Extract JSON: oc get configmap nexusliberty-grafana-dashboard -n liberty-apps \
+#        -o jsonpath='{.data.nexusliberty-dashboard\.json}' > /tmp/dashboard.json
+#   2. Open Grafana UI → Dashboards → Import → paste JSON from /tmp/dashboard.json
+#   3. Select the "Prometheus" datasource when prompted
+#   4. Verify panels render with data from the liberty-apps namespace
+#
+# If using the Grafana Operator with dashboard discovery (grafana_dashboard: "true"
+# label below), the dashboard auto-imports when the ConfigMap is created.
 apiVersion: v1
 kind: ConfigMap
 metadata:
