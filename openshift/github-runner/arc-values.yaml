@@ -49,6 +49,8 @@ template:
       - name: runner
         # Custom runner image built from docker/runner/Dockerfile and pushed to GHCR.
         # Includes oc CLI, helm, maven, and other CI tooling needed by the pipeline.
+        # CI rebuilds push SHA-tagged images; :latest is the rolling dev tag.
+        # Pin to a specific SHA tag in production for deterministic builds.
         image: ghcr.io/jconover/nexusliberty-runner:latest
 
         # ARC runner entrypoint — do not change unless you know what you're doing.

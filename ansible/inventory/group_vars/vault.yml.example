@@ -1,0 +1,11 @@
+---
+# vault.yml.example — Ansible Vault template for sensitive variables
+#
+# Usage:
+#   1. Copy this file: cp vault.yml.example vault.yml
+#   2. Encrypt it: ansible-vault encrypt vault.yml
+#   3. Reference in playbook: ansible-playbook -i inventory/hosts.ini ... --ask-vault-pass
+#
+# These values override the plaintext defaults in all.yml when vault is used.
+
+was_admin_password: "CHANGE_ME_use_vault_encrypt"

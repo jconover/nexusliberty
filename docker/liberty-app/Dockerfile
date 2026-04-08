@@ -36,9 +36,13 @@ RUN features.sh
 # Hazelcast 5.x includes Kubernetes discovery built-in — no separate
 # hazelcast-kubernetes plugin needed (that plugin is for Hazelcast 4.x).
 ARG HAZELCAST_VERSION=5.3.6
+# SHA256 checksums for integrity verification — update when changing HAZELCAST_VERSION.
+# Obtain new checksums from: https://repo1.maven.org/maven2/com/hazelcast/hazelcast/<version>/
+ARG HAZELCAST_SHA256=e2e94e73fd1ca0b15e8e42b1b43543690c41ae8e4583c8249a82e8b66af429bb
 RUN mkdir -p /opt/ol/wlp/usr/shared/resources/hazelcast && \
     curl -fsSL -o /opt/ol/wlp/usr/shared/resources/hazelcast/hazelcast-${HAZELCAST_VERSION}.jar \
-      "https://repo1.maven.org/maven2/com/hazelcast/hazelcast/${HAZELCAST_VERSION}/hazelcast-${HAZELCAST_VERSION}.jar"
+      "https://repo1.maven.org/maven2/com/hazelcast/hazelcast/${HAZELCAST_VERSION}/hazelcast-${HAZELCAST_VERSION}.jar" && \
+    echo "${HAZELCAST_SHA256}  /opt/ol/wlp/usr/shared/resources/hazelcast/hazelcast-${HAZELCAST_VERSION}.jar" | sha256sum -c -
 
 # Copy the application WAR from the build stage
 COPY --chown=1001:0 --from=build /build/target/nexus-app.war /config/apps/nexus-app.war

@@ -396,4 +396,4 @@ With the CI/CD pipeline complete, Phase 5 adds HA and observability:
 - Prometheus metrics from Liberty (mpMetrics)
 - Grafana dashboard for JVM/request metrics
 
-Next: [Phase 5 — HA and Operations](phase5-ha-operations.md)
+← [Previous: Phase 3 — Ansible WAS Automation](phase3-ansible-was-automation.md) | [Next: Phase 5 — HA and Operations](phase5-ha-operations.md) →

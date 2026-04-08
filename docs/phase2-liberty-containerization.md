@@ -296,3 +296,7 @@ Phase 3 adds Ansible automation for a simulated legacy WAS ND environment:
 - Ansible playbooks for WAS install, cluster creation, app deployment
 - IHS reverse proxy configuration
 - wsadmin Jython scripts for admin tasks
+
+---
+
+← [Previous: Phase 1 — Liberty Operator Install](phase1-liberty-operator-install.md) | [Next: Phase 3 — Ansible WAS Automation](phase3-ansible-was-automation.md) →

@@ -356,4 +356,4 @@ With the legacy WAS ND environment automated, Phase 4 builds the CI/CD pipeline:
 - Argo CD for GitOps deployment to OKD
 - End-to-end flow from code push to production deployment
 
-Next: [Phase 4 — CI/CD Pipeline](phase4-cicd-argocd.md)
+← [Previous: Phase 2 — Liberty Containerization](phase2-liberty-containerization.md) | [Next: Phase 4 — CI/CD Pipeline](phase4-cicd-argocd.md) →

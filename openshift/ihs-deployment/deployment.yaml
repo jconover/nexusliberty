@@ -34,6 +34,8 @@ spec:
                 topologyKey: kubernetes.io/hostname
       containers:
         - name: ihs
+          # CI workflow (.github/workflows/ihs-build.yml) pushes SHA-tagged images.
+          # Use :latest for local dev; ArgoCD or CI should override with a specific tag.
           image: ghcr.io/jconover/nexusliberty-ihs:latest
           ports:
             - name: http

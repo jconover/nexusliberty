@@ -1,0 +1,20 @@
+---
+# site.yml — Full WAS ND cell provisioning (all playbooks in order)
+#
+# Usage:
+#   ansible-playbook -i inventory/hosts.ini playbooks/site.yml
+#   ansible-playbook -i inventory/hosts.ini playbooks/site.yml --tags "cluster-create"
+#
+# Runs: WAS install → cluster creation → IHS setup → app deployment
+
+- name: "Stage 1: WAS ND Base Install"
+  ansible.builtin.import_playbook: was-install.yml
+
+- name: "Stage 2: WAS Cluster Creation"
+  ansible.builtin.import_playbook: was-cluster.yml
+
+- name: "Stage 3: IHS Install and Plugin Config"
+  ansible.builtin.import_playbook: ihs-install.yml
+
+- name: "Stage 4: Application Deployment"
+  ansible.builtin.import_playbook: was-deploy-app.yml

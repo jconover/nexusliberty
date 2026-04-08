@@ -10,6 +10,11 @@ import org.eclipse.microprofile.health.HealthCheckResponse;
 import org.eclipse.microprofile.health.HealthCheckResponseBuilder;
 import org.eclipse.microprofile.health.Liveness;
 
+/**
+ * MicroProfile Liveness probe for Kubernetes/OpenShift health checks.
+ * Reports DOWN if JVM deadlocks are detected or heap usage exceeds 95%,
+ * allowing the container orchestrator to restart the pod automatically.
+ */
 @Liveness
 @ApplicationScoped
 public class LivenessCheck implements HealthCheck {
@@ -18,8 +23,8 @@ public class LivenessCheck implements HealthCheck {
 
     @Override
     public HealthCheckResponse call() {
-        ThreadMXBean threadBean = ManagementFactory.getThreadMXBean();
-        MemoryMXBean memoryBean = ManagementFactory.getMemoryMXBean();
+        ThreadMXBean threadBean = getThreadMXBean();
+        MemoryMXBean memoryBean = getMemoryMXBean();
 
         long[] deadlockedThreads = threadBean.findDeadlockedThreads();
         long usedHeap = memoryBean.getHeapMemoryUsage().getUsed();
@@ -49,5 +54,14 @@ public class LivenessCheck implements HealthCheck {
         }
 
         return builder.build();
+    }
+
+    // Package-private for unit test override
+    ThreadMXBean getThreadMXBean() {
+        return ManagementFactory.getThreadMXBean();
+    }
+
+    MemoryMXBean getMemoryMXBean() {
+        return ManagementFactory.getMemoryMXBean();
     }
 }

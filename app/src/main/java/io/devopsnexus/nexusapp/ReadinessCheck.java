@@ -8,6 +8,12 @@ import org.eclipse.microprofile.health.HealthCheckResponse;
 import org.eclipse.microprofile.health.HealthCheckResponseBuilder;
 import org.eclipse.microprofile.health.Readiness;
 
+/**
+ * MicroProfile Readiness probe for Kubernetes/OpenShift health checks.
+ * Validates that the servlet context is initialized and that the Hazelcast
+ * JCache session cache is accessible. Reports DOWN if either dependency
+ * is unavailable, preventing traffic from reaching an unready pod.
+ */
 @Readiness
 @ApplicationScoped
 public class ReadinessCheck implements HealthCheck {

@@ -217,3 +217,7 @@ Once this works end-to-end, Phase 2 replaces the sample image with our own:
 - Configure server.xml
 - Push to GHCR (`ghcr.io/jconover/nexusliberty-app`)
 - Update the OpenLibertyApplication CR to point to our image
+
+---
+
+← [Prerequisites](prerequisites.md) | [Next: Phase 2 — Liberty Containerization](phase2-liberty-containerization.md) →
