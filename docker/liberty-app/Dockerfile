@@ -39,6 +39,7 @@ ARG HAZELCAST_VERSION=5.3.6
 # SHA256 checksums for integrity verification — update when changing HAZELCAST_VERSION.
 # Obtain new checksums from: https://repo1.maven.org/maven2/com/hazelcast/hazelcast/<version>/
 ARG HAZELCAST_SHA256=e2e94e73fd1ca0b15e8e42b1b43543690c41ae8e4583c8249a82e8b66af429bb
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN mkdir -p /opt/ol/wlp/usr/shared/resources/hazelcast && \
     curl -fsSL -o /opt/ol/wlp/usr/shared/resources/hazelcast/hazelcast-${HAZELCAST_VERSION}.jar \
       "https://repo1.maven.org/maven2/com/hazelcast/hazelcast/${HAZELCAST_VERSION}/hazelcast-${HAZELCAST_VERSION}.jar" && \
