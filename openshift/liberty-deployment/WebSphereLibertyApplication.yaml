@@ -15,7 +15,7 @@ spec:
   # Image tag is updated automatically by Tekton pipeline (04-task-git-update-manifest)
   # and by the GitHub Actions liberty-build workflow via sed + commit to main.
   # Argo CD detects the manifest change and syncs the new image to the cluster.
-  applicationImage: ghcr.io/jconover/nexusliberty-app:sha-71e6bca1073b52f671d9a20838c76c95b16425f1
+  applicationImage: ghcr.io/jconover/nexusliberty-app:sha-02dc6b3966d820c17b8605098c9df11941976c26
   # 2 replicas for HA — pod anti-affinity below spreads them across nodes.
   # Scale up to 3 for full node coverage on the 3-node homelab cluster.
   replicas: 2
