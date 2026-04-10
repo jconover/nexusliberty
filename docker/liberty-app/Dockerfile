@@ -56,6 +56,11 @@ COPY --chown=1001:0 --from=build /build/target/nexus-app.war /config/apps/nexus-
 # generates the default TLS keystore, and optimizes the server for container use.
 RUN configure.sh
 
+# configure.sh pre-warms the JVM shared class cache at /tmp/.classCache as UID 1001.
+# OpenShift restricted-v2 SCC runs the pod as a random UID (not 1001) but always GID 0.
+# Grant group-write so the runtime UID can update the cache.
+RUN chmod -R g+rwx /tmp/.classCache 2>/dev/null || true
+
 # Open Liberty runs as non-root by default (uid 1001 / group root)
 HEALTHCHECK --interval=30s --timeout=5s --start-period=90s --retries=3 \
     CMD curl -f http://localhost:9080/health/ready || exit 1
