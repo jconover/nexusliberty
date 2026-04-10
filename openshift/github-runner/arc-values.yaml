@@ -47,11 +47,11 @@ template:
 
     containers:
       - name: runner
-        # Custom runner image built from docker/runner/Dockerfile and pushed to GHCR.
-        # Includes oc CLI, helm, maven, and other CI tooling needed by the pipeline.
-        # CI rebuilds push SHA-tagged images; :latest is the rolling dev tag.
-        # Pin to a specific SHA tag in production for deterministic builds.
-        image: ghcr.io/jconover/nexusliberty-runner:latest
+        # Custom runner image built from docker/github-runner/Dockerfile and pushed to GHCR.
+        # Includes oc CLI and kubectl for triggering Tekton PipelineRuns.
+        # CI rebuilds push SHA-tagged images; pin to a branch or SHA tag for
+        # deterministic builds. Update after each runner image rebuild.
+        image: ghcr.io/jconover/nexusliberty-runner:main
 
         # ARC runner entrypoint — do not change unless you know what you're doing.
         command: ["/home/runner/run.sh"]
