@@ -7,7 +7,7 @@ Step-by-step guide to install the Open Liberty Operator on OKD and deploy a samp
 - OKD cluster healthy (`oc get clusteroperators` — all AVAILABLE=True)
 - `oc` CLI installed and logged in:
   ```bash
-  oc login https://api.nexuslab.nexuslab.local:6443 --username kubeadmin --password <password>
+  oc login https://api.<cluster>.<domain>:6443 --username kubeadmin --password <password>
   ```
 
 ## Step 0: Configure OAuth and Create an Admin User
@@ -155,23 +155,23 @@ oc get routes -n liberty-apps
 Expected output:
 ```
 NAME                  HOST/PORT                                                      PATH   SERVICES              PORT       TERMINATION
-nexusliberty-sample   nexusliberty-sample-liberty-apps.apps.nexuslab.nexuslab.local          nexusliberty-sample   9080-tcp   edge
+nexusliberty-sample   nexusliberty-sample-liberty-apps.apps.<cluster>.<domain>          nexusliberty-sample   9080-tcp   edge
 ```
 
-**DNS:** Your workstation needs to resolve `*.apps.nexuslab.nexuslab.local` to the ingress VIP (`192.168.68.101`). Add to `/etc/hosts` (Linux/Mac) or `C:\Windows\System32\drivers\etc\hosts` (Windows):
+**DNS:** Your workstation needs to resolve `*.apps.<cluster>.<domain>` to the ingress VIP. Add to `/etc/hosts` (Linux/Mac) or `C:\Windows\System32\drivers\etc\hosts` (Windows):
 ```
-192.168.68.101 nexusliberty-sample-liberty-apps.apps.nexuslab.nexuslab.local
+<ingress-vip> nexusliberty-sample-liberty-apps.apps.<cluster>.<domain>
 ```
 
 Test the app (note: `edge` route requires HTTPS on the client side, use `-k` to skip cert validation):
 ```bash
-curl -k https://nexusliberty-sample-liberty-apps.apps.nexuslab.nexuslab.local/
+curl -k https://nexusliberty-sample-liberty-apps.apps.<cluster>.<domain>/
 ```
 
 Test health endpoints:
 ```bash
-curl -k https://nexusliberty-sample-liberty-apps.apps.nexuslab.nexuslab.local/health/ready
-curl -k https://nexusliberty-sample-liberty-apps.apps.nexuslab.nexuslab.local/health/live
+curl -k https://nexusliberty-sample-liberty-apps.apps.<cluster>.<domain>/health/ready
+curl -k https://nexusliberty-sample-liberty-apps.apps.<cluster>.<domain>/health/live
 ```
 
 Both should return `{"status":"UP",...}`.

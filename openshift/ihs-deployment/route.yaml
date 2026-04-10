@@ -12,7 +12,8 @@ metadata:
     app.kubernetes.io/part-of: nexusliberty
     app.kubernetes.io/component: load-balancer
 spec:
-  host: nexusliberty-ihs.apps.nexuslab.nexuslab.local
+  # host: Omitted — OKD auto-generates from Route name + ingress domain.
+  # Override via: oc annotate route nexusliberty-ihs route.openshift.io/host=<your-host>
   to:
     kind: Service
     name: nexusliberty-ihs

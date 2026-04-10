@@ -106,8 +106,8 @@ oc get pods -l app.kubernetes.io/name=nexusliberty-ihs -n liberty-apps
 oc get route nexusliberty-ihs -n liberty-apps
 
 # Test routing through IHS
-curl -k https://nexusliberty-ihs.apps.nexuslab.nexuslab.local/app/
-curl -k https://nexusliberty-ihs.apps.nexuslab.nexuslab.local/ihs-health
+curl -k https://nexusliberty-ihs.apps.<cluster>.<domain>/app/
+curl -k https://nexusliberty-ihs.apps.<cluster>.<domain>/ihs-health
 ```
 
 ## Step 3 — Prometheus Monitoring
@@ -203,7 +203,7 @@ oc logs -l app.kubernetes.io/name=nexusliberty-app -n liberty-apps | grep -c "Me
 # Expected: entries showing size:2
 
 # 3. IHS pod running and proxying
-curl -k https://nexusliberty-ihs.apps.nexuslab.nexuslab.local/app/
+curl -k https://nexusliberty-ihs.apps.<cluster>.<domain>/app/
 # Expected: 200 OK from Liberty app
 
 # 4. Prometheus scraping Liberty metrics

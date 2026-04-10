@@ -6,7 +6,7 @@
 # Argo CD for continuous delivery to the OKD cluster.
 # After install, Argo CD is available in the openshift-gitops namespace
 # with a Route auto-created at:
-#   https://openshift-gitops-server-openshift-gitops.apps.nexuslab.nexuslab.local
+#   https://openshift-gitops-server-openshift-gitops.apps.<cluster>.<domain>
 
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription

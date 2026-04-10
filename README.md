@@ -4,9 +4,15 @@
 [![Build and Push IHS Image](https://github.com/jconover/nexusliberty/actions/workflows/ihs-build.yml/badge.svg)](https://github.com/jconover/nexusliberty/actions/workflows/ihs-build.yml)
 [![Ansible Lint](https://github.com/jconover/nexusliberty/actions/workflows/ansible-lint.yml/badge.svg)](https://github.com/jconover/nexusliberty/actions/workflows/ansible-lint.yml)
 
+![OpenShift](https://img.shields.io/badge/OpenShift-OKD_4.x-EE0000?logo=redhatopenshift&logoColor=white)
+![Liberty](https://img.shields.io/badge/Open_Liberty-Jakarta_EE_10-1F4096?logo=eclipseide&logoColor=white)
+![Tekton](https://img.shields.io/badge/Tekton-Pipelines-FD495C?logo=tekton&logoColor=white)
+![ArgoCD](https://img.shields.io/badge/Argo_CD-GitOps-EF7B4D?logo=argo&logoColor=white)
+![Ansible](https://img.shields.io/badge/Ansible-Automation-EE0000?logo=ansible&logoColor=white)
+
 **Modernizing enterprise Java workloads from IBM WebSphere Application Server to containerized Open Liberty on Red Hat OpenShift** — with full CI/CD automation, GitOps delivery, session clustering, and observability baked in.
 
-This portfolio project walks through the complete modernization lifecycle that enterprises face when moving off legacy WAS ND: automating the existing environment with Ansible, migrating to Liberty, containerizing workloads, deploying to OpenShift via operators, and running production-grade operations with monitoring and HA.
+This project demonstrates the complete modernization lifecycle that enterprises face when moving off legacy WAS ND: automating the existing environment with Ansible, migrating to Liberty, containerizing workloads, deploying to OpenShift via the WebSphere Liberty Operator, and running production-grade operations with monitoring, HA, and horizontal pod autoscaling.
 
 **Portfolio**: [devopsnexus.io](https://devopsnexus.io) | **GitHub**: [github.com/jconover/nexusliberty](https://github.com/jconover/nexusliberty)
 
@@ -19,8 +25,10 @@ This portfolio project walks through the complete modernization lifecycle that e
 - [Tech Stack](#tech-stack)
 - [Project Phases](#project-phases)
 - [Engineering Decisions](#engineering-decisions)
+- [CI/CD Pipeline Architecture](#cicd-pipeline-architecture)
 - [Quick Start](#quick-start)
 - [Repository Structure](#repository-structure)
+- [Known Issues](#known-issues)
 - [License](#license)
 
 ---
@@ -176,6 +184,33 @@ Key technical choices and the reasoning behind them:
 
 - **Vagrant simulation boundary for WAS ND** — The legacy environment simulates WAS ND structure and automation patterns without requiring an IBM license. Ansible playbooks and wsadmin scripts are real; the WAS binaries are simulated. This demonstrates the automation skill without licensing constraints.
 
+- **Three-tier CI/CD split (GitHub Actions → Tekton → Argo CD)** — GitHub Actions handles pre-merge quality gates on cloud runners (no cluster load). Tekton runs image builds on-cluster with buildah (no Docker-in-Docker). Argo CD provides GitOps-driven deployment with self-heal. Each system does what it's best at. See [CI/CD Pipeline Architecture](#cicd-pipeline-architecture).
+
+- **WebSphere Liberty Operator over raw Deployments** — The Liberty Operator manages the application lifecycle via CRDs (`OpenLibertyApplication`), handling probe injection, service creation, and route exposure. This mirrors how enterprises deploy Liberty on OpenShift in production and demonstrates Operator pattern fluency.
+
+---
+
+## CI/CD Pipeline Architecture
+
+The CI/CD pipeline is split across three systems, each handling what it does best:
+
+```
+Developer Push → GitHub Actions → Tekton (on-cluster) → Argo CD → OKD
+     │                │                  │                  │
+     │           Quality Gates      Build & Push       GitOps Sync
+     │          (lint, test,       (buildah image,     (auto-deploy
+     │           scan, build)     manifest commit)    on manifest Δ)
+     └─────────────────────────────────────────────────────────────────
+```
+
+| Stage | System | Why |
+|---|---|---|
+| **Quality gates** | GitHub Actions | Runs on every PR: Maven build, unit tests, Hadolint, Trivy vulnerability scan. Blocks merge on failure. Uses GitHub-hosted runners — no cluster resources consumed. |
+| **Image build + push** | Tekton (OpenShift Pipelines) | Runs on-cluster after merge to `main`. Buildah builds the Liberty image inside the OKD cluster (no Docker-in-Docker), pushes to GHCR, then commits the new image tag back to the repo. Triggered by a self-hosted GitHub Actions runner pod inside the cluster. |
+| **Deployment** | Argo CD (OpenShift GitOps) | Watches `openshift/liberty-deployment/` for manifest changes. When Tekton commits a new image tag, Argo CD detects the diff and syncs the updated `OpenLibertyApplication` CR to the cluster. Self-heal and auto-prune are enabled. |
+
+This separation means GitHub Actions never needs direct cluster access for builds, Tekton leverages the cluster's own container runtime, and Argo CD provides a single source of truth for what's deployed.
+
 ---
 
 ## Quick Start
@@ -280,6 +315,16 @@ nexusliberty/
     ├── ihs-build.yml
     └── ansible-lint.yml
 ```
+
+---
+
+## Known Issues
+
+| Issue | Impact | Workaround |
+|---|---|---|
+| **Tekton Pipelines console plugin fails to register on OKD 4.21** | The Pipelines UI tab does not appear in the OKD web console. Pipelines still run correctly via CLI. | Use `tkn` CLI or `oc get pipelinerun` to monitor pipeline executions. This is an [upstream OKD compatibility issue](https://github.com/openshift/console/issues) with the Tekton console plugin, not a project defect. |
+| **tekton-results pods may fail without a default StorageClass** | `tekton-results` controller pods enter CrashLoopBackOff if no default StorageClass is configured on the cluster. | Either configure a default StorageClass (`oc annotate storageclass <name> storageclass.kubernetes.io/is-default-class=true`) or disable tekton-results if result persistence is not needed. |
+| **HPA targets Deployment, not OpenLibertyApplication** | The HPA `scaleTargetRef` points to the Deployment created by the Liberty Operator, not the CR itself. If the Operator changes the Deployment name, the HPA breaks. | Verify the Deployment name matches: `oc get deployment -n liberty-apps`. The Liberty Operator conventionally names the Deployment after the CR (`nexusliberty-app`). |
 
 ---
 

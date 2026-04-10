@@ -417,3 +417,32 @@ before suggesting fixes.
 ### Languages and tools
 Primary: YAML (Ansible playbooks, K8s/OpenShift manifests), Python (wsadmin Jython),
 Shell (Bash), Java (Liberty app), Dockerfiles. Prefer these unless otherwise specified.
+
+
+## Current Project Status
+
+**All phases complete as of April 2026.**
+
+### Phase Completion Summary
+
+| Phase | Description | Status |
+|-------|-------------|--------|
+| 0 | OKD 4.21 cluster install (3x Beelink SER5 Max) | ✅ Complete |
+| 1 | Liberty Operator deploy + sample app running | ✅ Complete |
+| 2 | Ansible automation (WAS ND simulation, Liberty config) | ✅ Complete |
+| 3 | GitHub Actions CI/CD pipeline | ✅ Complete |
+| 4 | Full pipeline: build → push GHCR → deploy to OKD | ✅ Complete |
+| 5 | HA & Operations: mpMetrics, Prometheus, Grafana, runbooks | ✅ Complete |
+
+### Current Focus: Portfolio Polish
+The project is functionally complete. Current work is focused on:
+- Making the repo presentation-ready for GitHub public visibility
+- Ensuring no real IPs (192.168.68.x) or `.nexuslab.local` hostnames are in public files
+- Strengthening README for hiring manager and technical interviewer audiences
+- Filling any enterprise storytelling gaps (HPA, cert-manager, PDB, etc.)
+- Validating all manifests would pass an enterprise OpenShift review
+
+### Known Issues / Gaps to Address
+- Tekton Pipelines console plugin fails to register in OKD 4.21 (OKD limitation, documented in README)
+- tekton-results pods may fail without a default StorageClass — document workaround
+- DHCP pool should start at .68.102 to protect OKD VIPs (.68.100/.68.101) — home network only, not in repo

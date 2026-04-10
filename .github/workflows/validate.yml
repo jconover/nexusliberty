@@ -1,0 +1,77 @@
+name: Validate Manifests
+
+on:
+  pull_request:
+    paths:
+      - 'openshift/**'
+      - 'cluster/**'
+      - 'docker/**'
+
+permissions:
+  contents: read
+
+jobs:
+  yaml-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: YAML lint
+        uses: ibiqlik/action-yamllint@2576378a8e339169c90b19f7d9e48278b2723922 # v3.1.1
+        with:
+          file_or_dir: |
+            openshift/
+            cluster/
+          config_data: |
+            extends: default
+            rules:
+              line-length:
+                max: 200
+              truthy:
+                check-keys: false
+              comments:
+                min-spaces-from-content: 1
+
+  dockerfile-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Lint Liberty Dockerfile
+        uses: hadolint/hadolint-action@2332a7b74a6de0dda2e2221d575162eba76ba5e5 # v3.3.0
+        with:
+          dockerfile: docker/liberty-app/Dockerfile
+          failure-threshold: warning
+
+      - name: Lint IHS Dockerfile
+        uses: hadolint/hadolint-action@2332a7b74a6de0dda2e2221d575162eba76ba5e5 # v3.3.0
+        with:
+          dockerfile: docker/ihs/Dockerfile
+          failure-threshold: warning
+
+  kube-score:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Install kube-score
+        run: |
+          curl -fsSL -o kube-score https://github.com/zegl/kube-score/releases/download/v1.18.0/kube-score_1.18.0_linux_amd64
+          chmod +x kube-score
+          sudo mv kube-score /usr/local/bin/
+
+      - name: Score IHS manifests
+        run: |
+          kube-score score \
+            openshift/ihs-deployment/deployment.yaml \
+            openshift/ihs-deployment/service.yaml \
+            --ignore-test pod-networkpolicy \
+            --ignore-test container-image-pull-policy || true
+
+      - name: Score monitoring manifests
+        run: |
+          kube-score score \
+            openshift/monitoring/resourcequota.yaml || true

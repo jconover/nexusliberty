@@ -78,9 +78,9 @@ oc get pods -n liberty-apps -l app.kubernetes.io/name=nexusliberty-app
 oc describe pod -l app.kubernetes.io/name=nexusliberty-app -n liberty-apps
 
 # Health endpoints (from within cluster or via Route)
-curl -k https://nexusliberty-app-liberty-apps.apps.nexuslab.nexuslab.local/health
-curl -k https://nexusliberty-app-liberty-apps.apps.nexuslab.nexuslab.local/health/ready
-curl -k https://nexusliberty-app-liberty-apps.apps.nexuslab.nexuslab.local/health/live
+curl -k https://nexusliberty-app-liberty-apps.apps.<cluster>.<domain>/health
+curl -k https://nexusliberty-app-liberty-apps.apps.<cluster>.<domain>/health/ready
+curl -k https://nexusliberty-app-liberty-apps.apps.<cluster>.<domain>/health/live
 ```
 
 ### 2.2 View Liberty Logs
@@ -169,10 +169,10 @@ oc get pods -l app.kubernetes.io/name=nexusliberty-ihs -n liberty-apps
 oc logs -f -l app.kubernetes.io/name=nexusliberty-ihs -n liberty-apps
 
 # Test via Route
-curl -I https://nexusliberty-ihs.apps.nexuslab.nexuslab.local/app/
+curl -I https://nexusliberty-ihs.apps.<cluster>.<domain>/app/
 
 # Health check
-curl http://nexusliberty-ihs.apps.nexuslab.nexuslab.local/ihs-health
+curl http://nexusliberty-ihs.apps.<cluster>.<domain>/ihs-health
 ```
 
 ---
@@ -318,7 +318,7 @@ oc logs <ihs-pod> -n liberty-apps | grep -i "proxy" | grep -iE "error|refused"
 
 ```bash
 # OKD etcd backup (run on a control plane node)
-ssh core@okd-node1.nexuslab.nexuslab.local
+ssh core@okd-node1.<cluster>.<domain>
 sudo /usr/local/bin/cluster-backup.sh /home/core/backup/
 
 # Restore from backup (emergency only — follow OKD docs)

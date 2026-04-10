@@ -116,7 +116,7 @@ oc extract secret/openshift-gitops-cluster -n openshift-gitops --to=-
 
 ```bash
 oc get route openshift-gitops-server -n openshift-gitops -o jsonpath='{.spec.host}'
-# Expected: openshift-gitops-server-openshift-gitops.apps.nexuslab.nexuslab.local
+# Expected: openshift-gitops-server-openshift-gitops.apps.<cluster>.<domain>
 ```
 
 Open in browser with the admin credentials above.
@@ -216,7 +216,7 @@ oc get application -n openshift-gitops
 
 ### Why a self-hosted runner?
 
-GitHub Actions cloud runners run on GitHub's infrastructure and have no route to your homelab OKD cluster. The OKD API (`api.nexuslab.nexuslab.local:6443`) is on a private network unreachable from the public internet. Rather than exposing the API externally, a self-hosted runner pod runs inside the cluster itself — it has direct API access via the in-cluster Kubernetes service account and never needs to authenticate over the public internet.
+GitHub Actions cloud runners run on GitHub's infrastructure and have no route to your homelab OKD cluster. The OKD API (`api.<cluster>.<domain>:6443`) is on a private network unreachable from the public internet. Rather than exposing the API externally, a self-hosted runner pod runs inside the cluster itself — it has direct API access via the in-cluster Kubernetes service account and never needs to authenticate over the public internet.
 
 ### Prerequisites
 
@@ -269,7 +269,7 @@ Because the runner pod runs inside the cluster with an in-cluster `ServiceAccoun
 
 | Type | Name | Value |
 |---|---|---|
-| Variable | `OKD_SERVER_URL` | `https://api.nexuslab.nexuslab.local:6443` |
+| Variable | `OKD_SERVER_URL` | `https://api.<cluster>.<domain>:6443` |
 | Secret | `OKD_TOKEN` | Service account token with pipeline permissions |
 
 To get a long-lived token:
@@ -373,7 +373,7 @@ After the workflows run, check badges at `https://github.com/jconover/nexusliber
 - Check the git-credentials secret matches GitHub PAT
 
 **GitHub Actions can't reach OKD API**
-- Your cluster is behind NAT — GHA needs a route to `api.nexuslab.nexuslab.local:6443`
+- Your cluster is behind NAT — GHA needs a route to `api.<cluster>.<domain>:6443`
 - Options: Cloudflare Tunnel, port forwarding on router, or self-hosted runner on your network
 
 **GitHub Actions re-triggers itself after Tekton commits**

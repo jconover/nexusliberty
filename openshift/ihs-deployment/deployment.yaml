@@ -13,6 +13,11 @@ metadata:
     app.kubernetes.io/component: load-balancer
 spec:
   replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
   selector:
     matchLabels:
       app.kubernetes.io/name: nexusliberty-ihs
@@ -32,11 +37,19 @@ spec:
                   matchLabels:
                     app.kubernetes.io/name: nexusliberty-ihs
                 topologyKey: kubernetes.io/hostname
+      securityContext:
+        runAsNonRoot: true
       containers:
         - name: ihs
           # CI workflow (.github/workflows/ihs-build.yml) pushes SHA-tagged images.
-          # Use :latest for local dev; ArgoCD or CI should override with a specific tag.
+          # Argo CD or CI overrides this tag on each deploy. Using :latest as the
+          # base reference — the IHS image is rebuilt infrequently.
           image: ghcr.io/jconover/nexusliberty-ihs:latest
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
           ports:
             - name: http
               containerPort: 8080

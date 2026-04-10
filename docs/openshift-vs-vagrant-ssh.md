@@ -22,13 +22,13 @@ vagrant status
 
 ## 2. OpenShift/OKD Nodes (Real Cluster)
 
-Your real OKD cluster nodes (`okd-node1/2/3.nexuslab.nexuslab.local`) are **not meant for regular SSH access**. OKD runs on CoreOS, which is immutable — you don't install packages or manage services over SSH like traditional servers.
+Your real OKD cluster nodes (`okd-node1/2/3.<cluster>.<domain>`) are **not meant for regular SSH access**. OKD runs on CoreOS, which is immutable — you don't install packages or manage services over SSH like traditional servers.
 
 Instead, you interact with everything through `oc` commands:
 
 | Traditional server | OpenShift equivalent |
 |---|---|
-| `ssh user@server` | `oc debug node/okd-node1.nexuslab.nexuslab.local` (emergency only) |
+| `ssh user@server` | `oc debug node/okd-node1.<cluster>.<domain>` (emergency only) |
 | `ssh` into app server | `oc exec -it <pod-name> -n liberty-apps -- bash` |
 | Check logs via SSH | `oc logs <pod-name> -n liberty-apps` |
 | Check process status | `oc get pods -n liberty-apps` |
