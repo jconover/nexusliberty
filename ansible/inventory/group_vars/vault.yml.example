@@ -3,9 +3,12 @@
 #
 # Usage:
 #   1. Copy this file: cp vault.yml.example vault.yml
-#   2. Encrypt it: ansible-vault encrypt vault.yml
-#   3. Reference in playbook: ansible-playbook -i inventory/hosts.ini ... --ask-vault-pass
+#   2. Set real values below
+#   3. Encrypt it: ansible-vault encrypt inventory/group_vars/vault.yml
+#   4. Run playbooks with: ansible-playbook ... --ask-vault-pass
+#      or set ANSIBLE_VAULT_PASSWORD_FILE in your environment
 #
-# These values override the plaintext defaults in all.yml when vault is used.
+# all.yml references these via {{ vault_was_admin_password }} with a
+# fallback default for demo use. In production, always use vault.
 
-was_admin_password: "CHANGE_ME_use_vault_encrypt"
+vault_was_admin_password: "CHANGE_ME_use_vault_encrypt"
