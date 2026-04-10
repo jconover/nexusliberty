@@ -128,12 +128,12 @@ Add entries for the cluster endpoints. Wildcard (`*.apps`) is not supported in `
 
 ```
 # OKD Cluster
-192.168.68.93   okd-node1.<cluster>.<domain>
-192.168.68.84   okd-node2.<cluster>.<domain>
-192.168.68.88   okd-node3.<cluster>.<domain>
-192.168.68.100  api.<cluster>.<domain>
-192.168.68.101  console-openshift-console.apps.<cluster>.<domain>
-192.168.68.101  oauth-openshift.apps.<cluster>.<domain>
+<node1-ip>  okd-node1.<cluster>.<domain>
+<node2-ip>  okd-node2.<cluster>.<domain>
+<node3-ip>  okd-node3.<cluster>.<domain>
+<api-vip>   api.<cluster>.<domain>
+<ingress-vip>  console-openshift-console.apps.<cluster>.<domain>
+<ingress-vip>  oauth-openshift.apps.<cluster>.<domain>
 ```
 
 ### Option B: dnsmasq (supports wildcard)
@@ -142,8 +142,8 @@ Add entries for the cluster endpoints. Wildcard (`*.apps`) is not supported in `
 sudo apt install -y dnsmasq
 
 # Create config
-echo "address=/apps.<cluster>.<domain>/192.168.68.101" | sudo tee /etc/dnsmasq.d/okd.conf
-echo "address=/api.<cluster>.<domain>/192.168.68.100" | sudo tee -a /etc/dnsmasq.d/okd.conf
+echo "address=/apps.<cluster>.<domain>/<ingress-vip>" | sudo tee /etc/dnsmasq.d/okd.conf
+echo "address=/api.<cluster>.<domain>/<api-vip>" | sudo tee -a /etc/dnsmasq.d/okd.conf
 
 sudo systemctl restart dnsmasq
 ```

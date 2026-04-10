@@ -338,12 +338,12 @@ These are REST endpoints built into Liberty — check them before exec'ing into 
 
 ```bash
 # Health checks (via OpenShift Route)
-curl -k https://nexusliberty-app-liberty-apps.apps.nexuslab.nexuslab.local/health
-curl -k https://nexusliberty-app-liberty-apps.apps.nexuslab.nexuslab.local/health/ready
-curl -k https://nexusliberty-app-liberty-apps.apps.nexuslab.nexuslab.local/health/live
+curl -k https://nexusliberty-app-liberty-apps.apps.<cluster>.<domain>/health
+curl -k https://nexusliberty-app-liberty-apps.apps.<cluster>.<domain>/health/ready
+curl -k https://nexusliberty-app-liberty-apps.apps.<cluster>.<domain>/health/live
 
 # Metrics (Prometheus format)
-curl -k https://nexusliberty-app-liberty-apps.apps.nexuslab.nexuslab.local/metrics
+curl -k https://nexusliberty-app-liberty-apps.apps.<cluster>.<domain>/metrics
 
 # From inside the cluster (no TLS)
 oc exec <pod> -n liberty-apps -- curl -s http://localhost:9080/metrics

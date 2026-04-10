@@ -1,0 +1,55 @@
+---
+# HorizontalPodAutoscaler — scales Liberty pods based on CPU utilization.
+# Requires the Metrics Server (included in OKD by default).
+#
+# Scaling strategy:
+#   - Target 70% CPU: leaves headroom for request spikes before hitting limits.
+#   - Min 2 replicas: maintains HA even during low traffic.
+#   - Max 4 replicas: bounded by ResourceQuota (see monitoring/resourcequota.yaml)
+#     and the 3-node homelab cluster capacity.
+#   - Scale-down stabilization (5 min): prevents flapping during bursty traffic.
+#
+# In production, consider adding memory-based scaling or custom metrics
+# from Liberty's mpMetrics endpoint (e.g., active HTTP sessions, thread pool usage).
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: nexusliberty-app-hpa
+  namespace: liberty-apps
+  labels:
+    app.kubernetes.io/name: nexusliberty-app
+    app.kubernetes.io/part-of: nexusliberty
+    app.kubernetes.io/component: backend
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: nexusliberty-app
+  minReplicas: 2
+  maxReplicas: 4
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 30
+      policies:
+        - type: Pods
+          value: 2
+          periodSeconds: 60

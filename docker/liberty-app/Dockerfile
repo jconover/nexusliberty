@@ -23,6 +23,7 @@ FROM icr.io/appcafe/open-liberty:kernel-slim-java17-openj9-ubi-minimal AS runtim
 
 # Copy server configuration
 COPY --chown=1001:0 docker/liberty-app/server.xml /config/server.xml
+COPY --chown=1001:0 docker/liberty-app/server.env /config/server.env
 
 # Copy Hazelcast session cache config
 COPY --chown=1001:0 docker/liberty-app/hazelcast.xml /config/hazelcast.xml

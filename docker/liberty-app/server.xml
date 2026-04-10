@@ -78,6 +78,52 @@
     </cacheManager>
 
     <!-- ================================================================
+         DATASOURCE (STUB)
+         JNDI datasource for enterprise database connectivity.
+         Uncomment and configure when connecting to a real database.
+         In production, inject credentials via OpenShift Secrets
+         (oc create secret generic db-credentials).
+    ================================================================ -->
+    <!--
+    <library id="jdbcDriverLib">
+        <fileset dir="${shared.resource.dir}/jdbc" includes="*.jar"/>
+    </library>
+
+    <dataSource id="DefaultDataSource"
+                jndiName="jdbc/nexusDB"
+                type="javax.sql.ConnectionPoolDataSource">
+        <jdbcDriver libraryRef="jdbcDriverLib"/>
+        <properties.db2.jcc databaseName="${env.DB_NAME:nexusdb}"
+                            serverName="${env.DB_HOST:localhost}"
+                            portNumber="${env.DB_PORT:50000}"
+                            user="${env.DB_USER:dbuser}"
+                            password="${env.DB_PASSWORD}"/>
+        <connectionManager maxPoolSize="25"
+                           minPoolSize="5"
+                           connectionTimeout="30s"
+                           maxIdleTime="10m"/>
+    </dataSource>
+    -->
+
+    <!-- ================================================================
+         LDAP / SSO (STUB)
+         Uncomment to enable LDAP registry for enterprise SSO.
+         For OpenShift, consider integrating with the cluster's OAuth
+         provider via OpenID Connect instead of direct LDAP binding.
+    ================================================================ -->
+    <!--
+    <ldapRegistry id="ldap"
+                  host="${env.LDAP_HOST:ldap.example.com}"
+                  port="${env.LDAP_PORT:636}"
+                  baseDN="ou=users,dc=example,dc=com"
+                  sslEnabled="true"
+                  ldapType="Custom">
+        <idsFilters userFilter="(&amp;(uid=%v)(objectclass=inetOrgPerson))"
+                    groupFilter="(&amp;(cn=%v)(objectclass=groupOfNames))"/>
+    </ldapRegistry>
+    -->
+
+    <!-- ================================================================
          APPLICATION
          WAR is copied into the Liberty image at build time.
          contextRoot matches the OKD Route path prefix.
@@ -94,5 +140,27 @@
     ================================================================ -->
     <logging consoleFormat="json"
              consoleLogLevel="INFO"/>
+
+    <!-- ================================================================
+         EXECUTOR / THREAD POOL
+         Tuned for container environments:
+         - coreThreads matches typical container CPU allocation (2 cores)
+         - maxThreads caps to prevent thread exhaustion under load
+         - Liberty uses this pool for HTTP request processing and async work
+    ================================================================ -->
+    <executor id="defaultExecutor"
+              coreThreads="4"
+              maxThreads="20"
+              keepAlive="60s"/>
+
+    <!-- ================================================================
+         GRACEFUL SHUTDOWN
+         Open Liberty handles graceful shutdown by default: on SIGTERM
+         (pod termination), the JVM shutdown hook drains in-flight
+         requests before stopping. Kubernetes sends SIGTERM, waits
+         terminationGracePeriodSeconds (default 30s), then SIGKILL.
+         No additional Liberty config is required — the executor
+         keepAlive above controls idle thread reaping, not shutdown.
+    ================================================================ -->
 
 </server>

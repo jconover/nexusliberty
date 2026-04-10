@@ -222,7 +222,7 @@ These items need immediate attention:
 | HIGH | No architecture visuals | Zero `.png/.jpg/.svg` files in entire repo — strong differentiator missing |
 | MEDIUM | Phase 3 simulation boundary unclear | Doesn't state upfront that WAS ND is simulated without IBM binaries |
 | MEDIUM | No inter-document navigation | Phase docs lack previous/next links and tables of contents |
-| MEDIUM | Hardcoded domain names | `nexuslab.nexuslab.local` throughout — should use placeholders for portability |
+| MEDIUM | Hardcoded domain names | Real cluster domain replaced with `<cluster>.<domain>` placeholders throughout for portability |
 | MEDIUM | No `app/README.md` | Java application has no documentation of endpoints or local build process |
 | MEDIUM | Runbook duplicates Phase 5 | WAS runbook and Phase 5 overlap without cross-referencing |
 | LOW | Missing "What's Next" in phases 3-5 | Only phases 1-2 have forward links |
@@ -276,7 +276,7 @@ Spend focused effort on README + CLAUDE.md cleanup. These are the first things a
 | HIGH | `.dockerignore` references non-existent `terraform/` | Stale reference |
 | MEDIUM | `hazelcast-client.xml` misnamed | Contains full `<hazelcast>` config, not `<hazelcast-client>` |
 | MEDIUM | WLA license edition mismatch | CR says `IBM WebSphere Application Server` but image is Open Liberty (free) — credibility issue |
-| MEDIUM | Cross-domain naming inconsistency | `nexuslab.nexuslab.local` (CLAUDE.md) vs `nexuslab.local` (Vagrant) undocumented |
+| MEDIUM | Cross-domain naming inconsistency | OKD cluster uses `<cluster>.<domain>` placeholders; `nexuslab.local` (Vagrant) is intentionally separate |
 | LOW | No Makefile | `make build`, `make deploy`, `make lint` would improve DX |
 | LOW | No CONTRIBUTING.md | Not essential for portfolio but good practice |
 | LOW | No `.editorconfig` | Minor consistency aid |

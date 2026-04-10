@@ -200,26 +200,26 @@ oc get routes -n liberty-apps
 Expected:
 ```
 NAME               HOST/PORT                                                   SERVICES           PORT       TERMINATION
-nexusliberty-app   nexusliberty-app-liberty-apps.apps.nexuslab.nexuslab.local   nexusliberty-app   9080-tcp   edge
+nexusliberty-app   nexusliberty-app-liberty-apps.apps.<cluster>.<domain>   nexusliberty-app   9080-tcp   edge
 ```
 
 **DNS:** Add to `/etc/hosts` if not using wildcard DNS:
 ```
-192.168.68.101 nexusliberty-app-liberty-apps.apps.nexuslab.nexuslab.local
+<ingress-vip> nexusliberty-app-liberty-apps.apps.<cluster>.<domain>
 ```
 
 Test the deployed app:
 ```bash
 # Landing page
-curl -k https://nexusliberty-app-liberty-apps.apps.nexuslab.nexuslab.local/app/
+curl -k https://nexusliberty-app-liberty-apps.apps.<cluster>.<domain>/app/
 
 # REST endpoints
-curl -k https://nexusliberty-app-liberty-apps.apps.nexuslab.nexuslab.local/app/api/health
-curl -k https://nexusliberty-app-liberty-apps.apps.nexuslab.nexuslab.local/app/api/info
+curl -k https://nexusliberty-app-liberty-apps.apps.<cluster>.<domain>/app/api/health
+curl -k https://nexusliberty-app-liberty-apps.apps.<cluster>.<domain>/app/api/info
 
 # MicroProfile Health
-curl -k https://nexusliberty-app-liberty-apps.apps.nexuslab.nexuslab.local/health/ready
-curl -k https://nexusliberty-app-liberty-apps.apps.nexuslab.nexuslab.local/health/live
+curl -k https://nexusliberty-app-liberty-apps.apps.<cluster>.<domain>/health/ready
+curl -k https://nexusliberty-app-liberty-apps.apps.<cluster>.<domain>/health/live
 ```
 
 ## Step 7: Validate Everything
