@@ -41,10 +41,10 @@ spec:
         runAsNonRoot: true
       containers:
         - name: ihs
-          # CI workflow (.github/workflows/ihs-build.yml) pushes SHA-tagged images.
-          # Argo CD or CI overrides this tag on each deploy. Using :latest as the
-          # base reference — the IHS image is rebuilt infrequently.
-          image: ghcr.io/jconover/nexusliberty-ihs:latest
+          # CI workflow (.github/workflows/ihs-build.yml) pushes SHA-tagged images
+          # and updates this reference automatically via the update-manifest job.
+          # Argo CD detects the manifest change and syncs the new image.
+          image: ghcr.io/jconover/nexusliberty-ihs:main
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:

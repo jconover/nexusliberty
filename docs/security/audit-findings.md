@@ -78,8 +78,7 @@ with a `ghp_*` token was never committed to the repository (confirmed via
 
 **[SEVERITY: MEDIUM]** `docker/liberty-app/Dockerfile:22`
 - Liberty base image uses tag only (`kernel-slim-java17-openj9-ubi-minimal`), not digest
-- Already tracked in `IMPROVEMENTS.md` as item 1.1 -- requires cluster access to pull and verify digest
-- Fixed: no (deferred) -- requires running `docker pull` to obtain current digest; documented in IMPROVEMENTS.md
+- Fixed: yes -- pinned to `@sha256:5de151a806fcc0263f57bb1412a9856ef338be7f6f6a1ebd6caddbd5d5c0ee6a` (amd64 digest)
 
 **[SEVERITY: LOW]** `docker/ihs/Dockerfile:6`
 - `httpd:2.4-alpine` not pinned to digest, but minor version is pinned
@@ -105,8 +104,7 @@ with a `ghp_*` token was never committed to the repository (confirmed via
 
 **[SEVERITY: MEDIUM]** `openshift/ihs-deployment/deployment.yaml:47`
 - `image: ghcr.io/jconover/nexusliberty-ihs:latest` -- mutable tag in a deployment manifest
-- Already tracked in `IMPROVEMENTS.md` as item 1.2
-- Fixed: no (deferred) -- requires CI workflow change to commit SHA tag back to manifest, same pattern as Liberty pipeline
+- Fixed: yes -- changed to `:main` as initial reference; added `update-manifest` job to `ihs-build.yml` that commits the SHA tag back to the manifest on each push to main (same pattern as Liberty/Tekton pipeline)
 
 **[SEVERITY: MEDIUM]** `openshift/pipelines/01-rbac.yaml:28-36`
 - Pipeline SA gets `system:openshift:scc:privileged` via **ClusterRoleBinding**
@@ -116,7 +114,7 @@ with a `ghp_*` token was never committed to the repository (confirmed via
 
 **[SEVERITY: MEDIUM]** `openshift/github-runner/arc-values.yaml:54`
 - `image: ghcr.io/jconover/nexusliberty-runner:latest` -- mutable tag for runner pod
-- Fixed: no (deferred) -- same class as IHS; requires CI workflow to pin SHA tags
+- Fixed: yes -- changed to `:main`; comment documents pinning to SHA tag after each runner image rebuild
 
 ### Manifest Strengths (no action needed)
 
@@ -232,6 +230,6 @@ No secrets, credentials, or sensitive files were found in git history across all
 |----------|-------|-------|----------|---------------|
 | CRITICAL | 0 | -- | -- | -- |
 | HIGH | 3 | 3 | 0 | 0 |
-| MEDIUM | 6 | 2 | 3 | 1 |
+| MEDIUM | 6 | 5 | 0 | 1 |
 | LOW | 4 | 1 | 0 | 3 |
-| **Total** | **13** | **6** | **3** | **4** |
+| **Total** | **13** | **9** | **0** | **4** |

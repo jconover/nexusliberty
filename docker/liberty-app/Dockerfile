@@ -19,7 +19,10 @@ RUN mvn clean package -B
 # =============================================================================
 # Stage 2 — Open Liberty runtime
 # =============================================================================
-FROM icr.io/appcafe/open-liberty:kernel-slim-java17-openj9-ubi-minimal AS runtime
+# Pin to digest for reproducible builds. To update:
+#   docker manifest inspect icr.io/appcafe/open-liberty:kernel-slim-java17-openj9-ubi-minimal
+# and replace the sha256 below with the amd64 digest.
+FROM icr.io/appcafe/open-liberty:kernel-slim-java17-openj9-ubi-minimal@sha256:5de151a806fcc0263f57bb1412a9856ef338be7f6f6a1ebd6caddbd5d5c0ee6a AS runtime
 
 # Copy server configuration
 COPY --chown=1001:0 docker/liberty-app/server.xml /config/server.xml
