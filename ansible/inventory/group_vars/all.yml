@@ -22,9 +22,11 @@ dmgr_soap_port: 8879
 dmgr_admin_port: 9060
 dmgr_admin_secure_port: 9043
 
-# --- WAS admin credentials (simulation only — vault in production) ---
+# --- WAS admin credentials ---
+# In production, encrypt with: ansible-vault encrypt inventory/group_vars/vault.yml
+# See vault.yml.example for the template.
 was_admin_user: wasadmin
-was_admin_password: wasadmin123
+was_admin_password: "{{ vault_was_admin_password | default('wasadmin123') }}"
 
 # --- OS user/group for WAS ---
 was_user: wasadmin

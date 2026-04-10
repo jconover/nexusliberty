@@ -2,7 +2,9 @@
 # Extends the official actions-runner base image with the OpenShift CLI (oc)
 # so that workflows can trigger Tekton PipelineRuns on OKD 4.x.
 
-FROM ghcr.io/actions/actions-runner:latest
+# Pin to a release tag for reproducible builds.
+# Check for newer versions at: https://github.com/actions/runner/releases
+FROM ghcr.io/actions/actions-runner:2.321.0
 
 USER root
 

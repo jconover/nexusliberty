@@ -14,5 +14,10 @@ openshift/pipelines/03-secrets.yaml
 *.pem
 *.p12
 *.jks
+kubeconfig
+**/kubeconfig
 *-secrets.yaml
 !*-secrets.yaml.example
+
+# Ansible Vault (encrypted credentials)
+ansible/inventory/group_vars/vault.yml

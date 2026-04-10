@@ -36,7 +36,7 @@ spec:
       optional: true
   steps:
     - name: update-and-push
-      image: docker.io/alpine/git:latest
+      image: docker.io/alpine/git:2.47.2
       script: |
         #!/bin/sh
         set -e

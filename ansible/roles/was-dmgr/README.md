@@ -15,7 +15,7 @@ Creates the Dmgr01 profile with cell topology, server index, and wsadmin scripts
 | `dmgr_host` | `nexus-dmgr.nexuslab.local` | Dmgr hostname |
 | `dmgr_soap_port` | `8879` | SOAP connector port |
 | `was_admin_user` | `wasadmin` | Admin console user |
-| `was_admin_password` | `wasadmin123` | Admin password (use vault) |
+| `was_admin_password` | *(vault)* | Admin password — encrypt with `ansible-vault` |
 
 ## Example
 
