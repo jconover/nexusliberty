@@ -50,12 +50,22 @@ Then go to [Runbook 01 — Health Check](01-health-check.md) for the full proced
 
 ## Runbook Index
 
+### Liberty on OKD
+
 | # | Runbook | When to Use | Time |
 |---|---------|-------------|------|
 | [01](01-health-check.md) | **Liberty Application Health Check** | First response to any alert. Produces a Healthy / Degraded / Down verdict and routes to the correct follow-up. | 5-10 min |
 | [02](02-deploy-and-rollback.md) | **Deploy, Verify, and Rollback** | During or after a deployment. Also when you need to undo a bad deploy. | 5-15 min |
 | [03](03-pod-failure-and-recovery.md) | **Pod Failure Triage and Recovery** | Liberty pod is CrashLoopBackOff, OOMKilled, ImagePullBackOff, Pending, or not Ready. | 10-30 min |
 | [04](04-scaling-and-performance.md) | **Scaling and Performance Tuning** | Application is slow, thread pool saturated, heap under pressure, or traffic spike incoming. | 10-30 min |
+
+### Supporting Systems
+
+| Runbook | Scope |
+|---|---|
+| [WAS ND Daily Operations](was-daily-operations.md) | Legacy cell health, server management, deployments, log locations |
+| [IHS Load Balancer](ihs-operations.md) | Legacy and containerized IHS management |
+| [Session Replication](session-replication.md) | Hazelcast JCache cluster verification and failover testing |
 
 ---
 

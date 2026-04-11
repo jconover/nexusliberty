@@ -308,7 +308,15 @@ nexusliberty/
 │   ├── phase3-ansible-was-automation.md
 │   ├── phase4-cicd-argocd.md
 │   ├── phase5-ha-operations.md
-│   └── was-runbook.md
+│   └── runbooks/                          # Operations runbooks
+│       ├── README.md                      # Runbook index
+│       ├── 01-health-check.md             # Systematic health verification
+│       ├── 02-deploy-and-rollback.md      # Deploy lifecycle + rollback
+│       ├── 03-pod-failure-and-recovery.md # Failure triage + recovery
+│       ├── 04-scaling-and-performance.md  # Scaling + JVM tuning
+│       ├── was-daily-operations.md        # WAS ND cell management
+│       ├── ihs-operations.md              # IHS load balancer management
+│       └── session-replication.md         # Hazelcast JCache verification
 │
 └── .github/workflows/                     # CI pipelines
     ├── liberty-build.yml
