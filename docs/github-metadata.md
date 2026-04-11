@@ -14,8 +14,28 @@ Enterprise WAS ND → Open Liberty modernization on bare-metal OKD 4.x with Ansi
 
 ## Topics
 
+Enter each topic one at a time in the GitHub Topics input field, pressing Enter after each:
+
 ```
-openshift, okd, websphere-liberty, open-liberty, ibm-websphere, ansible, tekton, argo-cd, gitops, prometheus, grafana, hazelcast, jakarta-ee, microprofile, devops, middleware, kubernetes, ci-cd, portfolio
+openshift
+okd
+websphere-liberty
+open-liberty
+ibm-websphere
+ansible
+tekton
+argo-cd
+gitops
+prometheus
+grafana
+hazelcast
+jakarta-ee
+microprofile
+devops
+middleware
+kubernetes
+ci-cd
+portfolio
 ```
 
 ---
