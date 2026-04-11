@@ -65,6 +65,14 @@ spec:
         port: 9080
       failureThreshold: 30
       periodSeconds: 10
+  # Rolling update: maxUnavailable=0 ensures zero downtime during deploys.
+  # maxSurge=1 limits extra pod creation on the 3-node homelab cluster.
+  deployment:
+    updateStrategy:
+      type: RollingUpdate
+      rollingUpdate:
+        maxUnavailable: 0
+        maxSurge: 1
   env:
     - name: WLP_LOGGING_CONSOLE_FORMAT
       value: json
