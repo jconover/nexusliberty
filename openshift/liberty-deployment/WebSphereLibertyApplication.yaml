@@ -7,11 +7,6 @@ metadata:
     app.kubernetes.io/name: nexusliberty-app
     app.kubernetes.io/component: backend
 spec:
-  # License: Open Liberty (free, open-source upstream of WebSphere Liberty).
-  # No commercial license required for portfolio/dev use.
-  license:
-    accept: true
-    edition: Open
   # Image tag is updated automatically by Tekton pipeline (04-task-git-update-manifest)
   # and by the GitHub Actions liberty-build workflow via sed + commit to main.
   # Argo CD detects the manifest change and syncs the new image to the cluster.
@@ -48,26 +43,28 @@ spec:
     limits:
       cpu: 500m
       memory: 768Mi
-  readinessProbe:
-    httpGet:
-      path: /health/ready
-      port: 9080
-    initialDelaySeconds: 30
-    periodSeconds: 10
-  livenessProbe:
-    httpGet:
-      path: /health/live
-      port: 9080
-    initialDelaySeconds: 60
-    periodSeconds: 30
-  # Startup probe: gives Liberty up to 5 min (30 x 10s) to start before liveness kicks in.
-  # Prevents liveness from killing slow-starting JVMs during initial class loading.
-  startupProbe:
-    httpGet:
-      path: /health/live
-      port: 9080
-    failureThreshold: 30
-    periodSeconds: 10
+  # Health probes using the Open Liberty Operator CRD schema (spec.probes).
+  probes:
+    readiness:
+      httpGet:
+        path: /health/ready
+        port: 9080
+      initialDelaySeconds: 30
+      periodSeconds: 10
+    liveness:
+      httpGet:
+        path: /health/live
+        port: 9080
+      initialDelaySeconds: 60
+      periodSeconds: 30
+    # Startup probe: gives Liberty up to 5 min (30 x 10s) to start before liveness kicks in.
+    # Prevents liveness from killing slow-starting JVMs during initial class loading.
+    startup:
+      httpGet:
+        path: /health/live
+        port: 9080
+      failureThreshold: 30
+      periodSeconds: 10
   env:
     - name: WLP_LOGGING_CONSOLE_FORMAT
       value: json
